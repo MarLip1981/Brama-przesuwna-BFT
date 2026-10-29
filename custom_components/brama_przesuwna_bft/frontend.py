@@ -5,7 +5,6 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
-from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.core import HomeAssistant
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "0.1.7"
+_CARD_VERSION = "0.1.8"
 _RESOURCE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
@@ -36,21 +35,20 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
 
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is None:
-        # Load the card as an extra module even if Lovelace has not initialized
-        # its resource registry yet; setup is retried once HA has fully started.
-        add_extra_js_url(hass, _RESOURCE_URL)
+        # Avoid add_extra_js_url: extra modules can run before HA's custom-element registry is ready.
+        # Setup is retried after HA starts; register through Lovelace resources when available.
         _LOGGER.warning(
-            "Lovelace nie udostępnił jeszcze rejestru zasobów; dodano kartę BFT jako dodatkowy moduł JS."
+            "Rejestr Lovelace nie jest jeszcze dostępny; ponowimy rejestrację karty BFT po uruchomieniu Home Assistanta."
         )
         return
 
-    # YAML-managed Lovelace resources are read-only; inject the module through
-    # the same frontend helper used by the working AtlasCube integration.
     if getattr(lovelace, "resource_mode", "storage") == "yaml":
-        add_extra_js_url(hass, _RESOURCE_URL)
-        _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS (tryb YAML).")
+        # YAML resources are read-only from an integration; log the required resource instead.
+        _LOGGER.warning(
+            "Karta BFT: Lovelace działa w trybie zasobów YAML. Dodaj zasób %s jako type: module.",
+            _RESOURCE_URL,
+        )
         return
-
     resources = getattr(lovelace, "resources", None)
     if resources is None:
         _LOGGER.warning("Nie znaleziono rejestru zasobów Lovelace dla karty BFT.")
