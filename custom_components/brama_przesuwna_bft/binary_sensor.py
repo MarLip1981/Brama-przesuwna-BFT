@@ -34,4 +34,9 @@ class PedestrianModeSensor(BinarySensorEntity):
     @property
     def is_on(self) -> bool:
         """Return the configured option value."""
-        return bool(self._entry.options.get(OPTION_PEDESTRIAN_MODE, False))
+        return bool(
+            self._entry.options.get(
+                OPTION_PEDESTRIAN_MODE,
+                self._entry.data.get(OPTION_PEDESTRIAN_MODE, False),
+            )
+        )
