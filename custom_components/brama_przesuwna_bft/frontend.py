@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "0.1.8"
+_CARD_VERSION = "1.9.0"
 _RESOURCE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
@@ -28,7 +28,6 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             [StaticPathConfig(_CARD_URL, str(_CARD_PATH), cache_headers=False)]
         )
     except Exception as err:  # noqa: BLE001
-        # The route may already exist after integration reload.
         message = str(err).lower()
         if "already registered" not in message and "duplicate" not in message:
             _LOGGER.warning("Nie udało się udostępnić pliku karty BFT: %s", err)
@@ -42,8 +41,6 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
         return
 
     if getattr(lovelace, "resource_mode", "storage") == "yaml":
-        # Match the working AtlasCube integration: load the card as an extra JS module
-        # when Lovelace resources are managed in YAML and cannot be edited via storage API.
         add_extra_js_url(hass, _RESOURCE_URL)
         _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS: %s", _RESOURCE_URL)
         return
