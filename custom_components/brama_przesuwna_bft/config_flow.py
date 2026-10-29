@@ -122,9 +122,14 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         )
 
     async def async_step_gate(self, user_input=None):
-        """Configure the gate card."""
+        """Configure the gate card without overwriting notification options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            # Each options step writes the entire options dictionary. Preserve
+            # values saved by the other section instead of silently resetting them.
+            return self.async_create_entry(
+                title="",
+                data={**self.config_entry.options, **user_input},
+            )
         pedestrian = self.config_entry.options.get(
             OPTION_PEDESTRIAN_MODE,
             self.config_entry.data.get(OPTION_PEDESTRIAN_MODE, False),
@@ -139,9 +144,12 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         )
 
     async def async_step_notifications(self, user_input=None):
-        """Configure when and where phone notifications are sent."""
+        """Configure notifications without overwriting gate-card options."""
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_create_entry(
+                title="",
+                data={**self.config_entry.options, **user_input},
+            )
         return self.async_show_form(
             step_id="notifications",
             data_schema=_notification_schema(self.hass, self.config_entry),
