@@ -45,6 +45,12 @@ Firmware pozostaje plikiem projektu w tym repozytorium. Użytkownik pobiera go i
 
 Dokładne kroki importu pliku do dodatku ESPHome dopracujemy w instrukcji instalacyjnej projektu.
 
+## Powiadomienia na telefon
+
+W ustawieniach integracji można niezależnie włączyć powiadomienie po osiągnięciu stanu **Otwarta** i **Zamknięta**. Powiadomienia są wysyłane przez usługę Home Assistant `notify.cala_rodzina`, tak samo jak w projekcie „Klimat Domowy”; dzięki temu dostarczenie poza domową siecią Wi-Fi zależy od działania skonfigurowanej usługi mobilnej, a nie od lokalnego połączenia telefonu z Wi-Fi.
+
+Powiadomienie jest wysyłane dopiero wtedy, gdy końcowy stan utrzyma się przez 2 sekundy. Stany pośrednie „Otwieranie” i „Zamykanie” nie wywołują powiadomień. Obie opcje są domyślnie wyłączone.
+
 ## Karta dashboardu
 
 Integracja rejestruje własną kartę Lovelace podczas uruchamiania i ponawia próbę przy ładowaniu wpisu integracji. Następnie w edytorze dashboardu dodaj kartę **Brama przesuwna BFT** z wyboru kart. Karta nie wymaga `custom:button-card`.
