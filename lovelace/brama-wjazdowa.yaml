@@ -1,0 +1,141 @@
+type: vertical-stack
+cards:
+  - type: custom:button-card
+    entity: sensor.wjazd_brama_wjazdowa_pozycja_bramy
+    name: Brama wjazdowa
+    show_icon: false
+    show_state: false
+    tap_action:
+      action: more-info
+      entity: sensor.brama_wjazdowa_dokladny_stan_bramy
+    hold_action:
+      action: more-info
+      entity: sensor.wjazd_brama_wjazdowa_pozycja_bramy
+    triggers_update:
+      - sensor.wjazd_brama_wjazdowa_pozycja_bramy
+      - sensor.brama_wjazdowa_dokladny_stan_bramy
+    styles:
+      card:
+        - padding: 12px
+        - border-radius: 22px
+        - overflow: hidden
+      grid:
+        - grid-template-areas: '"n status_header" "scene scene"'
+        - grid-template-columns: 1fr auto
+        - grid-template-rows: min-content 155px
+        - column-gap: 8px
+      name:
+        - justify-self: start
+        - align-self: center
+        - font-size: 20px
+        - font-weight: 600
+        - padding: 4px
+      custom_fields:
+        status_header:
+          - justify-self: end
+          - align-self: center
+          - text-align: right
+          - padding: 4px
+          - font-size: 14px
+        scene:
+          - width: 100%
+          - align-self: center
+    custom_fields:
+      status_header: |
+        [[[
+          const s = states['sensor.brama_wjazdowa_dokladny_stan_bramy']?.state || '';
+          const raw = states['sensor.wjazd_brama_wjazdowa_pozycja_bramy']?.state;
+          const p = Number(raw);
+          const valid = raw !== undefined && raw !== 'unknown' && raw !== 'unavailable' && Number.isFinite(p);
+          const pct = valid ? Math.max(0, Math.min(100, Math.round(p))) : null;
+          let color = '#a0aab0', glow = 'none', weight = '500', label = s;
+          if (/zamknięta/i.test(s)) { color = '#42c878'; label = '● Zamknięta'; }
+          else if (/otwarta/i.test(s)) { color = '#ff4545'; glow = '0 0 8px rgba(255,50,50,.65)'; weight = '800'; label = '● Otwarta'; }
+          else if (/otwieranie/i.test(s)) { color = '#ffbd4a'; label = '● Otwieranie' + (pct !== null ? ' ' + pct + '%' : ''); }
+          else if (/zamykanie/i.test(s)) { color = '#ffbd4a'; label = '● Zamykanie' + (pct !== null ? ' ' + pct + '%' : ''); }
+          else if (!s || ['unknown','unavailable'].includes(s)) label = 'Brak stanu';
+          return '<span style="color:' + color + ';font-weight:' + weight + ';text-shadow:' + glow + ';white-space:nowrap">' + label + '</span>';
+        ]]]
+      scene: |
+        [[[
+          const raw = states['sensor.wjazd_brama_wjazdowa_pozycja_bramy']?.state;
+          const n = Number(raw);
+          const valid = raw !== undefined && raw !== 'unknown' && raw !== 'unavailable' && Number.isFinite(n);
+          const pos = valid ? Math.max(0, Math.min(100, n)) : 0;
+          const status = states['sensor.brama_wjazdowa_dokladny_stan_bramy']?.state || '';
+          const lamp = /otwieranie|zamykanie|otwarta/i.test(status);
+          const shift = 1.9 * pos;
+          let svg = '<svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg">';
+          svg += '<defs><linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#607984" stop-opacity=".08"/><stop offset="100%" stop-color="#182b35" stop-opacity=".25"/></linearGradient><linearGradient id="gateFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#465b65"/><stop offset="50%" stop-color="#80949d"/><stop offset="100%" stop-color="#465b65"/></linearGradient></defs>';
+          svg += '<rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/><path d="M5 130 H395" stroke="#637983" stroke-width="2" opacity=".7"/><path d="M5 141 H395" stroke="#637983" stroke-width="1" opacity=".22"/>';
+          svg += '<g fill="#637983" stroke="#344953" stroke-width="1">';
+          for (let i=0;i<4;i++) { svg += '<rect x="5" y="' + (47+i*16) + '" width="30" height="11" rx="1"/>'; }
+          for (let i=0;i<4;i++) { svg += '<rect x="298" y="' + (47+i*16) + '" width="97" height="11" rx="1"/>'; }
+          svg += '</g><rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/><rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>';
+          if (lamp) svg += '<circle cx="288.5" cy="18" r="19" fill="#ff9d28" opacity=".2"/>';
+          svg += '<path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="' + (lamp ? '#ffad35' : '#687780') + '" stroke="' + (lamp ? '#ffca75' : '#46565e') + '" stroke-width="1.5"/><path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="' + (lamp ? '#fff0b1' : '#839097') + '" opacity="' + (lamp ? '1' : '.45') + '"/><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>';
+          svg += '<g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>';
+          svg += '<g style="transition:transform 1.05s linear" transform="translate(' + shift + ',0)">';
+          svg += '<rect x="51" y="44" width="228" height="83" fill="url(#gateFill)" stroke="#344953" stroke-width="2"/>';
+          for (let i=0;i<15;i++) { svg += '<rect x="' + (57+i*14.5) + '" y="49" width="9" height="64" rx="1" fill="#8fa2aa" stroke="#425760" stroke-width="1"/>'; }
+          svg += '<rect x="51" y="114" width="228" height="6" fill="#344953"/><rect x="51" y="122" width="228" height="5" fill="#526872"/><path d="M279 44 L355 101 L355 127 L279 127 Z" fill="#536a74" fill-opacity=".7" stroke="#344953" stroke-width="3"/><path d="M286 54 L344 101 M286 73 L324 101" stroke="#91a3ab" stroke-width="3" opacity=".75"/>';
+          svg += '</g>';
+          // Koła są poza ruchomą grupą, więc pozostają nieruchome na fundamencie.
+          svg += '<g fill="#253740" stroke="#91a3ab" stroke-width="2"><circle cx="306" cy="132" r="6"/><circle cx="342" cy="132" r="6"/></g></svg>';
+          return svg;
+        ]]]
+  - type: grid
+    columns: 2
+    square: false
+    cards:
+      - type: custom:button-card
+        entity: button.brama_wjazdowa_otworz_jako_furtke
+        name: |
+          [[[
+            const s = states['sensor.brama_wjazdowa_dokladny_stan_bramy']?.state || '';
+            return /otwarta/i.test(s) ? 'Furtka - Zamknij' : 'Furtka - Otwórz';
+          ]]]
+        icon: mdi:walk
+        tap_action:
+          action: call-service
+          service: button.press
+          service_data:
+            entity_id: |
+              [[[
+                const s = states['sensor.brama_wjazdowa_dokladny_stan_bramy']?.state || '';
+                return /otwarta/i.test(s) ? 'button.brama_wjazdowa_otworz_zamknij_brame' : 'button.brama_wjazdowa_otworz_jako_furtke';
+              ]]]
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px
+          icon:
+            - color: '#39b982'
+            - width: 28px
+          name:
+            - font-weight: 600
+      - type: custom:button-card
+        entity: button.brama_wjazdowa_otworz_zamknij_brame
+        name: |
+          [[[
+            const s = states['sensor.brama_wjazdowa_dokladny_stan_bramy']?.state || '';
+            if (/otwieranie|zamykanie/i.test(s)) return 'Brama - Stop';
+            if (/otwarta/i.test(s)) return 'Brama - Zamknij';
+            if (/zamknięta/i.test(s)) return 'Brama - Otwórz';
+            return 'Brama - Steruj';
+          ]]]
+        icon: mdi:gate
+        tap_action:
+          action: call-service
+          service: button.press
+          target:
+            entity_id: button.brama_wjazdowa_otworz_zamknij_brame
+        styles:
+          card:
+            - border-radius: 16px
+            - padding: 14px
+          icon:
+            - color: '#429ee8'
+            - width: 28px
+          name:
+            - font-weight: 600
