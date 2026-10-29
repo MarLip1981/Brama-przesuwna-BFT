@@ -4,9 +4,10 @@
     "step": {
       "user": {
         "title": "Podstawowe ustawienia bramy",
-        "description": "Wybierz, czy karta dashboardu ma udostępniać sterowanie furtką. To ustawienie możesz później zmienić w konfiguracji integracji.",
+        "description": "Wybierz, czy karta ma udostępniać sterowanie furtką oraz w którą stronę przesuwa się brama, patrząc od strony podwórka. Ustawienia można później zmienić w konfiguracji integracji.",
         "data": {
-          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki",
+          "opening_direction": "Kierunek otwierania (patrząc od strony podwórka)"
         }
       }
     },
@@ -18,9 +19,10 @@
     "step": {
       "init": {
         "title": "Ustawienia bramy",
-        "description": "Możesz w każdej chwili zmienić, czy karta dashboardu ma pokazywać przycisk furtki.",
+        "description": "Określ dostępność przycisku furtki i kierunek przesuwania bramy, patrząc od strony podwórka.",
         "data": {
-          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki",
+          "opening_direction": "Kierunek otwierania (patrząc od strony podwórka)"
         }
       }
     }
