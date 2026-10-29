@@ -58,15 +58,11 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     @staticmethod
     def async_get_options_flow(config_entry):
         """Return the integration options flow."""
-        return BramaPrzesuwnaBFTOptionsFlow(config_entry)
+        return BramaPrzesuwnaBFTOptionsFlow()
 
 
 class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
     """Manage options for the gate card."""
-
-    def __init__(self, config_entry):
-        """Keep the entry used to populate the defaults."""
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         """Configure pedestrian mode and the viewed opening direction."""
