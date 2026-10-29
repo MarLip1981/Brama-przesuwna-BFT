@@ -99,7 +99,13 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
   }
 }
 
-customElements.define("brama-przesuwna-bft-card", BramaPrzesuwnaBFTCard);
-customElements.define("brama-przesuwna-bft-card-editor", BramaPrzesuwnaBFTCardEditor);
+if (!customElements.get("brama-przesuwna-bft-card")) {
+  customElements.define("brama-przesuwna-bft-card", BramaPrzesuwnaBFTCard);
+}
+if (!customElements.get("brama-przesuwna-bft-card-editor")) {
+  customElements.define("brama-przesuwna-bft-card-editor", BramaPrzesuwnaBFTCardEditor);
+}
 window.customCards = window.customCards || [];
-window.customCards.push({ type: "brama-przesuwna-bft-card", name: "Brama przesuwna BFT", description: "Karta sterowania bramą i furtką." });
+if (!window.customCards.some((card) => card.type === "brama-przesuwna-bft-card")) {
+  window.customCards.push({ type: "brama-przesuwna-bft-card", name: "Brama przesuwna BFT", description: "Karta sterowania bramą i furtką." });
+}
