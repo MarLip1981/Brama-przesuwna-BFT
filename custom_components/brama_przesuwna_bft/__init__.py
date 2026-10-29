@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -53,6 +54,13 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
         return
 
     if not enabled:
+        return
+
+    # The SCA status can briefly chatter during movement; only notify if the
+    # final state remains stable for two seconds.
+    await asyncio.sleep(2)
+    current_state = hass.states.get(GATE_STATUS_ENTITY)
+    if current_state is None or current_state.state != state:
         return
 
     try:
