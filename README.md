@@ -16,7 +16,7 @@ Nie zakładaj zgodności z innymi płytkami ani napędami bez sprawdzenia pinów
 
 Potrzebujesz działającego **Home Assistant** oraz dodatku **ESPHome** (ESPHome Device Builder) zainstalowanego w Home Assistant. Dodatek ESPHome ułatwia przygotowanie, kompilację i wgranie firmware na płytkę ESP32.
 
-Nasza integracja **Brama przesuwna BFT** jest osobnym elementem. Instalowana przez HACS będzie udostępniać konfigurator projektu oraz kartę bramy do dashboardu Home Assistant. Nie zastępuje dodatku ESPHome.
+Nasza integracja **Brama przesuwna BFT** jest osobnym elementem. Instalowana przez HACS udostępnia ustawienia integracji oraz kartę bramy do dashboardu Home Assistant. Nie zastępuje dodatku ESPHome.
 
 ## Instalacja integracji przez HACS — ręczne repozytorium
 
@@ -47,7 +47,9 @@ Dokładne kroki importu pliku do dodatku ESPHome dopracujemy w instrukcji instal
 
 ## Karta dashboardu
 
-Integracja zawiera własną kartę Lovelace i próbuje automatycznie dodać jej zasób JavaScript do zasobów Home Assistant po skonfigurowaniu integracji. Następnie w edytorze dashboardu dodaj kartę **Brama przesuwna BFT** z wyboru kart. Karta nie wymaga `custom:button-card`.
+Integracja rejestruje własną kartę Lovelace podczas uruchamiania i ponawia próbę przy ładowaniu wpisu integracji. Następnie w edytorze dashboardu dodaj kartę **Brama przesuwna BFT** z wyboru kart. Karta nie wymaga `custom:button-card`.
+
+W ustawieniach integracji dostępna jest opcja **Korzystaj z trybu furtki**. Gdy jest wyłączona, karta pokazuje wyłącznie sterowanie bramą, bez przycisku „Otwórz furtkę”. Po włączeniu opcji przycisk furtki pojawia się na karcie. Opcja jest domyślnie wyłączona.
 
 Karta ma domyślne identyfikatory encji zgodne z firmware tego projektu. Jeżeli zmienisz nazwę urządzenia lub identyfikatory encji w ESPHome, można je poprawić w edytorze karty. Integracja nie wstawia automatycznie karty do istniejącego dashboardu — nie zmienia samodzielnie układu pulpitu użytkownika.
 
