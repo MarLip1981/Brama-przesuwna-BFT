@@ -90,8 +90,14 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             OPTION_OPENING_DIRECTION,
             self.config_entry.data.get(OPTION_OPENING_DIRECTION, "left"),
         )
-        notify_open = self.config_entry.options.get(OPTION_NOTIFY_OPEN, False)
-        notify_closed = self.config_entry.options.get(OPTION_NOTIFY_CLOSED, False)
+        notify_open = self.config_entry.options.get(
+            OPTION_NOTIFY_OPEN,
+            self.config_entry.data.get(OPTION_NOTIFY_OPEN, False),
+        )
+        notify_closed = self.config_entry.options.get(
+            OPTION_NOTIFY_CLOSED,
+            self.config_entry.data.get(OPTION_NOTIFY_CLOSED, False),
+        )
         return self.async_show_form(
             step_id="init",
             data_schema=_schema(pedestrian, direction, notify_open, notify_closed),
