@@ -3,9 +3,10 @@
     "step": {
       "user": {
         "title": "Basic gate settings",
-        "description": "Choose whether the dashboard card should provide pedestrian-gate control. You can change this later in the integration settings.",
+        "description": "Choose whether the card should provide pedestrian-gate control and the gate's opening direction as viewed from the yard. You can change these settings later.",
         "data": {
-          "pedestrian_mode_enabled": "Enable pedestrian-gate mode"
+          "pedestrian_mode_enabled": "Enable pedestrian-gate mode",
+          "opening_direction": "Opening direction (viewed from the yard)"
         }
       }
     },
@@ -17,9 +18,10 @@
     "step": {
       "init": {
         "title": "Gate settings",
-        "description": "You can change at any time whether the dashboard card shows the pedestrian-gate button.",
+        "description": "Set pedestrian-gate button availability and the opening direction as viewed from the yard.",
         "data": {
-          "pedestrian_mode_enabled": "Enable pedestrian-gate mode"
+          "pedestrian_mode_enabled": "Enable pedestrian-gate mode",
+          "opening_direction": "Opening direction (viewed from the yard)"
         }
       }
     }
