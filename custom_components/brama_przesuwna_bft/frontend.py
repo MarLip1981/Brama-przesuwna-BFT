@@ -5,6 +5,7 @@ from __future__ import annotations
 import logging
 from pathlib import Path
 
+from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.core import HomeAssistant
@@ -35,20 +36,18 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
 
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is None:
-        # Avoid add_extra_js_url: extra modules can run before HA's custom-element registry is ready.
-        # Setup is retried after HA starts; register through Lovelace resources when available.
         _LOGGER.warning(
             "Rejestr Lovelace nie jest jeszcze dostępny; ponowimy rejestrację karty BFT po uruchomieniu Home Assistanta."
         )
         return
 
     if getattr(lovelace, "resource_mode", "storage") == "yaml":
-        # YAML resources are read-only from an integration; log the required resource instead.
-        _LOGGER.warning(
-            "Karta BFT: Lovelace działa w trybie zasobów YAML. Dodaj zasób %s jako type: module.",
-            _RESOURCE_URL,
-        )
+        # Match the working AtlasCube integration: load the card as an extra JS module
+        # when Lovelace resources are managed in YAML and cannot be edited via storage API.
+        add_extra_js_url(hass, _RESOURCE_URL)
+        _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS: %s", _RESOURCE_URL)
         return
+
     resources = getattr(lovelace, "resources", None)
     if resources is None:
         _LOGGER.warning("Nie znaleziono rejestru zasobów Lovelace dla karty BFT.")
