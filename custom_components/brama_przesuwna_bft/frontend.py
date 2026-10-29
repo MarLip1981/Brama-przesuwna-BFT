@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import asyncio
 import logging
 from pathlib import Path
 
@@ -13,7 +12,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "1.9.3"
+_CARD_VERSION = "1.9.4"
 _RESOURCE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
@@ -39,21 +38,11 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
     resource_mode = getattr(lovelace, "resource_mode", None) if lovelace else None
 
     if resource_mode == "storage" and resources is not None:
-        # Resource modules are loaded in sequence with the dashboard. This avoids
-        # the race that can occur when registering custom elements via
-        # add_extra_js_url() before Home Assistant's frontend polyfills are ready.
-        for _ in range(60):
-            if getattr(resources, "loaded", False):
-                break
-            await asyncio.sleep(1)
-        else:
-            _LOGGER.warning(
-                "Zasoby Lovelace nie zostały załadowane; karta BFT nie została "
-                "automatycznie dodana do listy zasobów."
-            )
-            return
-
         try:
+            # ResourceStorageCollection loads lazily. Explicitly load it before
+            # inspecting or creating items; otherwise async_items() may be empty
+            # and creating an item can overwrite the user's existing resources.
+            await resources.async_load()
             existing = next(
                 (
                     item
