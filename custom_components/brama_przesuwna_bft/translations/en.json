@@ -4,13 +4,22 @@
       "user": {
         "title": "BFT sliding gate",
         "description": "Configure the BFT sliding gate integration.",
-        "data": {
-          "name": "Name"
-        }
+        "data": {}
       }
     },
     "abort": {
       "already_configured": "This integration is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Gate settings",
+        "description": "Choose whether the dashboard card should show pedestrian-gate controls.",
+        "data": {
+          "pedestrian_mode_enabled": "Enable pedestrian-gate mode"
+        }
+      }
     }
   }
 }
