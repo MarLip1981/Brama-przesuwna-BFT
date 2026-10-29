@@ -3,15 +3,14 @@
     "step": {
       "user": {
         "title": "Brama przesuwna BFT",
-        "description": "Dodaje podstawową integrację projektu. Firmware ESPHome i kartę Lovelace przygotowuje się osobno.",
+        "description": "Podstawowa integracja projektu. Firmware ESPHome i kartę Lovelace przygotowuje się osobno.",
         "data": {
           "name": "Nazwa"
         }
       }
     },
     "abort": {
-      "already_configured": "Integracja jest już skonfigurowana.",
-      "no_options": "Konfigurator projektu zostanie dodany w późniejszej wersji."
+      "already_configured": "Integracja jest już skonfigurowana."
     }
   }
 }
