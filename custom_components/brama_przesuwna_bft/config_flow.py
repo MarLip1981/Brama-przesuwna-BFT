@@ -10,12 +10,19 @@ from homeassistant.helpers import selector
 from .const import (
     DEFAULT_NAME,
     DOMAIN,
+    OPTION_NOTIFY_CLOSED,
+    OPTION_NOTIFY_OPEN,
     OPTION_OPENING_DIRECTION,
     OPTION_PEDESTRIAN_MODE,
 )
 
 
-def _schema(pedestrian_default: bool, direction_default: str):
+def _schema(
+    pedestrian_default: bool,
+    direction_default: str,
+    notify_open_default: bool = False,
+    notify_closed_default: bool = False,
+):
     """Build setup/options schema with safe defaults."""
     return vol.Schema(
         {
@@ -33,6 +40,12 @@ def _schema(pedestrian_default: bool, direction_default: str):
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
+            vol.Required(
+                OPTION_NOTIFY_OPEN, default=notify_open_default
+            ): selector.BooleanSelector(),
+            vol.Required(
+                OPTION_NOTIFY_CLOSED, default=notify_closed_default
+            ): selector.BooleanSelector(),
         }
     )
 
@@ -62,10 +75,10 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
-    """Manage options for the gate card."""
+    """Manage options for the gate card and notifications."""
 
     async def async_step_init(self, user_input=None):
-        """Configure pedestrian mode and the viewed opening direction."""
+        """Configure card options and phone notifications."""
         if user_input is not None:
             return self.async_create_entry(title="", data=user_input)
 
@@ -77,7 +90,9 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             OPTION_OPENING_DIRECTION,
             self.config_entry.data.get(OPTION_OPENING_DIRECTION, "left"),
         )
+        notify_open = self.config_entry.options.get(OPTION_NOTIFY_OPEN, False)
+        notify_closed = self.config_entry.options.get(OPTION_NOTIFY_CLOSED, False)
         return self.async_show_form(
             step_id="init",
-            data_schema=_schema(pedestrian, direction),
+            data_schema=_schema(pedestrian, direction, notify_open, notify_closed),
         )
