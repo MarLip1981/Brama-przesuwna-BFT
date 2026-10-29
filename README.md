@@ -49,6 +49,39 @@ Dokładne kroki importu pliku do dodatku ESPHome dopracujemy w instrukcji instal
 
 Plik [karty Lovelace](lovelace/brama-wjazdowa.yaml) pozostaje dostępny w repozytorium. Docelowo karta będzie dostarczana i udostępniana w dashboardzie przez naszą integrację. Wymaga również niestandardowej karty `custom:button-card`. Konfigurator i automatyczne udostępnianie karty są jeszcze w trakcie przygotowania — obecna wersja repozytorium nie powinna być traktowana jako gotowy instalator.
 
+## Połączenia elektryczne — ustalenia dla instalacji referencyjnej
+
+Poniższe połączenia opisują instalację z napędem BFT DEIMOS ULTRA BT B 600 i płytką ESP32 Relay X4 (AC/DC). Przed wykonaniem prac odłącz zasilanie napędu i zweryfikuj oznaczenia na swojej wersji płyty.
+
+### Sterowanie wejściami napędu
+
+| Element ESP32 Relay X4 | Zacisk napędu BFT | Funkcja |
+|---|---:|---|
+| Przekaźnik 1 — COM | 60 | Wspólny styk sterowania przyciskiem |
+| Przekaźnik 1 — NO | 61 | Impuls sterujący bramą |
+| Przekaźnik 2 — COM | 60 | Wspólny styk drugiego wejścia |
+| Przekaźnik 2 — NO | 62 | Impuls sterujący funkcją furtki / częściowego otwarcia |
+| Przekaźnik 1 i 2 — NC | — | Nie podłączać |
+
+Przekaźniki pracują jako styki bezpotencjałowe, równolegle do odpowiednich wejść sterujących. Nie doprowadzaj do zacisków 60–62 napięcia zasilającego płytkę ESP32.
+
+### Odczyt stanu bramy — AUX/SCA
+
+| Płytka ESP32 Relay X4 | Zacisk napędu BFT |
+|---|---:|
+| GND | 26 |
+| GPIO22 | 27 |
+
+Wyjście AUX napędu musi być skonfigurowane jako **bezpotencjałowy sygnał stanu bramy (SCA)**. Nie może podawać napięcia na GPIO22. Przed podłączeniem sprawdź konfigurację AUX i instrukcję napędu. Nie używaj wyjścia z napięciem jako bezpośredniego sygnału logicznego ESP32.
+
+### Fotokomórka — jeszcze niepodłączona
+
+Planowane jest użycie dodatkowego przekaźnika: jego cewka będzie podłączona do zacisków 70 i 72 napędu, na których według założeń tej instalacji pojawia się 24 V po naruszeniu fotokomórki. Styki COM i NO tego przekaźnika mają przekazać wyłącznie odizolowany sygnał do wejścia GPIO23.
+
+**Nie podłączaj zacisków 70–72 bezpośrednio do ESP32.** Przed realizacją trzeba potwierdzić rodzaj napięcia na 70–72, parametry cewki przekaźnika oraz sposób podłączenia styków do wejścia płytki. Fotokomórka nie jest jeszcze częścią uruchomionej instalacji.
+
+Schemat graficzny zostanie dodany po ukończeniu i sprawdzeniu dokumentacji połączeń.
+
 ## Ważne informacje o działaniu i bezpieczeństwie
 
 1. Pozycja bramy jest szacowana na podstawie czasu ruchu; procent nie pochodzi z enkodera i może odbiegać od rzeczywistego położenia.
