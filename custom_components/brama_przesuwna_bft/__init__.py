@@ -11,10 +11,11 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.helpers.event import async_track_state_change_event
 
 from .const import (
+    DEFAULT_NOTIFY_TARGET,
     GATE_STATUS_ENTITY,
-    NOTIFY_SERVICE,
     OPTION_NOTIFY_CLOSED,
     OPTION_NOTIFY_OPEN,
+    OPTION_NOTIFY_TARGETS,
     PLATFORMS,
 )
 from .frontend import async_setup_frontend
@@ -38,7 +39,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, event: Event) -> None:
-    """Notify the family when the gate reaches a configured final state."""
+    """Notify selected targets when the gate reaches a configured final state."""
     new_state = event.data.get("new_state")
     if new_state is None:
         return
@@ -46,14 +47,12 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
     state = new_state.state
     if state == "Otwarta":
         enabled = entry.options.get(
-            OPTION_NOTIFY_OPEN,
-            entry.data.get(OPTION_NOTIFY_OPEN, False),
+            OPTION_NOTIFY_OPEN, entry.data.get(OPTION_NOTIFY_OPEN, False)
         )
         message = "Brama wjazdowa jest otwarta."
     elif state == "Zamknięta":
         enabled = entry.options.get(
-            OPTION_NOTIFY_CLOSED,
-            entry.data.get(OPTION_NOTIFY_CLOSED, False),
+            OPTION_NOTIFY_CLOSED, entry.data.get(OPTION_NOTIFY_CLOSED, False)
         )
         message = "Brama wjazdowa jest zamknięta."
     else:
@@ -62,27 +61,35 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
     if not enabled:
         return
 
-    # The SCA status can briefly chatter during movement; only notify if the
-    # final state remains stable for two seconds.
     await asyncio.sleep(2)
     current_state = hass.states.get(GATE_STATUS_ENTITY)
     if current_state is None or current_state.state != state:
         return
 
-    try:
-        await hass.services.async_call(
-            "notify",
-            NOTIFY_SERVICE,
-            {"message": message, "title": "Brama wjazdowa"},
-            blocking=True,
-        )
-        _LOGGER.debug("Wysłano powiadomienie o stanie bramy: %s", state)
-    except Exception:  # noqa: BLE001
-        _LOGGER.exception(
-            "Nie udało się wysłać powiadomienia o stanie bramy. "
-            "Sprawdź, czy usługa notify.%s jest dostępna.",
-            NOTIFY_SERVICE,
-        )
+    targets = entry.options.get(
+        OPTION_NOTIFY_TARGETS,
+        entry.data.get(OPTION_NOTIFY_TARGETS, [DEFAULT_NOTIFY_TARGET]),
+    )
+    if isinstance(targets, str):
+        targets = [targets]
+
+    for target in targets:
+        if not target:
+            continue
+        try:
+            await hass.services.async_call(
+                "notify",
+                target,
+                {"message": message, "title": "Brama wjazdowa"},
+                blocking=True,
+            )
+            _LOGGER.debug("Wysłano powiadomienie o stanie bramy przez notify.%s", target)
+        except Exception:  # noqa: BLE001
+            _LOGGER.exception(
+                "Nie udało się wysłać powiadomienia przez notify.%s. "
+                "Sprawdź, czy ta usługa jest dostępna.",
+                target,
+            )
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
