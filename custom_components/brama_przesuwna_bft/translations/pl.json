@@ -2,15 +2,26 @@
   "config": {
     "step": {
       "user": {
-        "title": "Brama przesuwna BFT",
-        "description": "Podstawowa konfiguracja integracji bramy przesuwnej BFT.",
+        "title": "Podstawowe ustawienia bramy",
+        "description": "Wybierz, czy karta dashboardu ma udostępniać sterowanie furtką. To ustawienie możesz później zmienić w konfiguracji integracji.",
         "data": {
-          "name": "Nazwa"
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
         }
       }
     },
     "abort": {
-      "already_configured": "Integracja jest już skonfigurowana."
+      "single_instance_allowed": "Integracja jest już skonfigurowana."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ustawienia bramy",
+        "description": "Możesz w każdej chwili zmienić, czy karta dashboardu ma pokazywać przycisk furtki.",
+        "data": {
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
+        }
+      }
     }
   }
 }
