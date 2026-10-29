@@ -47,7 +47,11 @@ Dokładne kroki importu pliku do dodatku ESPHome dopracujemy w instrukcji instal
 
 ## Karta dashboardu
 
-Plik [karty Lovelace](lovelace/brama-wjazdowa.yaml) pozostaje dostępny w repozytorium. Docelowo karta będzie dostarczana i udostępniana w dashboardzie przez naszą integrację. Wymaga również niestandardowej karty `custom:button-card`. Konfigurator i automatyczne udostępnianie karty są jeszcze w trakcie przygotowania — obecna wersja repozytorium nie powinna być traktowana jako gotowy instalator.
+Integracja zawiera własną kartę Lovelace i próbuje automatycznie dodać jej zasób JavaScript do zasobów Home Assistant po skonfigurowaniu integracji. Następnie w edytorze dashboardu dodaj kartę **Brama przesuwna BFT** z wyboru kart. Karta nie wymaga `custom:button-card`.
+
+Karta ma domyślne identyfikatory encji zgodne z firmware tego projektu. Jeżeli zmienisz nazwę urządzenia lub identyfikatory encji w ESPHome, można je poprawić w edytorze karty. Integracja nie wstawia automatycznie karty do istniejącego dashboardu — nie zmienia samodzielnie układu pulpitu użytkownika.
+
+Dotychczasowy plik [karty Lovelace w YAML](lovelace/brama-wjazdowa.yaml) również pozostaje dostępny w repozytorium, ale ta starsza wersja wymaga niestandardowej karty `custom:button-card`.
 
 ## Połączenia elektryczne — ustalenia dla instalacji referencyjnej
 
@@ -92,4 +96,4 @@ Schemat graficzny zostanie dodany po ukończeniu i sprawdzeniu dokumentacji poł
 
 ## Status projektu
 
-Projekt jest rozwijany etapami. Obecna integracja HACS jest podstawą pod docelowy konfigurator i kartę dashboardu. Firmware jest instalowany ręcznie przez użytkownika za pomocą ESPHome.
+Integracja ma podstawowy przepływ konfiguracji, serwuje własną kartę Lovelace i podejmuje próbę automatycznej rejestracji jej zasobu. Konfigurator jest na tym etapie podstawowy; nie wykrywa jeszcze automatycznie urządzenia ESPHome ani nie weryfikuje połączeń z napędem. Firmware pozostaje pobierany i wgrywany ręcznie przez użytkownika za pomocą dodatku ESPHome.
