@@ -3,13 +3,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Podstawowe ustawienia bramy",
-        "description": "Wybierz opcje karty oraz powiadomienia wysyłane na telefony przez usługę notify.cala_rodzina. Ustawienia można później zmienić w konfiguracji integracji.",
+        "title": "Ustawienia bramy",
+        "description": "Ustaw podstawowe działanie karty. Powiadomienia skonfigurujesz osobno po dodaniu integracji.",
         "data": {
-          "pedestrian_mode_enabled": "Korzystaj z trybu furtki",
-          "opening_direction": "Kierunek otwierania (patrząc od strony podwórka)",
-          "notify_when_open": "Powiadom na telefon, gdy brama będzie otwarta",
-          "notify_when_closed": "Powiadom na telefon, gdy brama będzie zamknięta"
+          "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
+          "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
         }
       }
     },
@@ -21,12 +19,26 @@
     "step": {
       "init": {
         "title": "Ustawienia bramy",
-        "description": "Ustaw kartę oraz wybierz, czy wysyłać powiadomienia na telefony przez notify.cala_rodzina po osiągnięciu stanu otwartego lub zamkniętego.",
+        "menu_options": {
+          "gate": "Karta i działanie bramy",
+          "notifications": "Powiadomienia"
+        }
+      },
+      "gate": {
+        "title": "Karta i działanie bramy",
+        "description": "Dostosuj działanie karty do swojej instalacji.",
         "data": {
-          "pedestrian_mode_enabled": "Korzystaj z trybu furtki",
-          "opening_direction": "Kierunek otwierania (patrząc od strony podwórka)",
-          "notify_when_open": "Powiadom na telefon, gdy brama będzie otwarta",
-          "notify_when_closed": "Powiadom na telefon, gdy brama będzie zamknięta"
+          "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
+          "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
+        }
+      },
+      "notifications": {
+        "title": "Powiadomienia",
+        "description": "Wybierz, kiedy i na które telefony wysyłać wiadomość o stanie bramy. Możesz zaznaczyć kilka urządzeń lub grupę rodzinną.",
+        "data": {
+          "notify_when_open": "Powiadom, gdy brama się otworzy",
+          "notify_when_closed": "Powiadom, gdy brama się zamknie",
+          "notify_targets": "Telefony lub grupy, które mają otrzymywać powiadomienia"
         }
       }
     }
