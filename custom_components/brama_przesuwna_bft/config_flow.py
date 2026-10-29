@@ -24,7 +24,15 @@ def _schema(pedestrian_default: bool, direction_default: str):
             ): selector.BooleanSelector(),
             vol.Required(
                 OPTION_OPENING_DIRECTION, default=direction_default
-            ): vol.In(["left", "right"]),
+            ): selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {"value": "left", "label": "W lewo"},
+                        {"value": "right", "label": "W prawo"},
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            ),
         }
     )
 
