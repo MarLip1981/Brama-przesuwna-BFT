@@ -1,0 +1,498 @@
+# ============================================================
+# BRAMA WJAZDOWA — BFT DEIMOS ULTRA BT B 600
+# Sterownik: ESP32 Relay X4 (AC/DC)
+#
+# GPIO32 — przekaźnik 1: brama
+# GPIO33 — przekaźnik 2: furtka
+# GPIO25 — przekaźnik 3 (rezerwa)
+# GPIO26 — przekaźnik 4 (rezerwa)
+# GPIO22 — sygnał SCA z AUX2
+# GPIO23 — fotokomórka przez optoizolator
+#
+# Kalibracja: pełne zamykanie, wyłącznie bez przeszkód.
+# Pozycja: szacowana na podstawie czasu przejazdu.
+# ============================================================
+
+esphome:
+  name: brama-wjazdowa
+  friendly_name: Brama wjazdowa
+
+  on_boot:
+    - priority: -100
+      then:
+        - lambda: |-
+            id(czas_przejazdu_number).publish_state(id(czas_przejazdu_s));
+
+            if (!id(stan_aux_sca).state) {
+              id(pozycja_bramy) = 0.0f;
+              id(kierunek_ruchu) = "idle";
+              id(status_bramy).publish_state("Zamknięta");
+            } else {
+              id(status_bramy).publish_state(
+                "Stan niepewny — SCA aktywne po uruchomieniu"
+              );
+            }
+
+esp32:
+  variant: esp32
+  framework:
+    type: esp-idf
+
+logger:
+
+api:
+  encryption:
+    key: !secret api_encryption_key
+
+ota:
+  - platform: esphome
+
+wifi:
+  output_power: 20dB
+  networks:
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_password
+    - ssid: !secret wifi_backup_ssid
+      password: !secret wifi_backup_pass
+  ap:
+    ssid: "brama-wjazdowa-konfig"
+
+captive_portal:
+
+web_server:
+  port: 80
+
+time:
+  - platform: homeassistant
+    id: ha_time
+    on_time:
+      - seconds: 0
+        minutes: 0
+        hours: 3
+        days_of_week: MON
+        then:
+          - lambda: |-
+              id(kalibracja_tygodniowa) = true;
+
+globals:
+  - id: kierunek_ruchu
+    type: std::string
+    restore_value: no
+    initial_value: '"idle"'
+
+  - id: czas_przejazdu_s
+    type: int
+    restore_value: yes
+    initial_value: '17'
+
+  - id: pozycja_bramy
+    type: float
+    restore_value: yes
+    initial_value: '0'
+
+  - id: ostatnia_aktualizacja_ms
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+
+  - id: ostatnia_zmiana_sca_ms
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+
+  - id: poczatek_zamykania_ms
+    type: unsigned long
+    restore_value: no
+    initial_value: '0'
+
+  - id: pozycja_start_zamykania
+    type: float
+    restore_value: no
+    initial_value: '0'
+
+  - id: fotokomorka_podczas_zamykania
+    type: bool
+    restore_value: no
+    initial_value: 'false'
+
+  - id: kalibracja_reczna
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+
+  - id: kalibracja_tygodniowa
+    type: bool
+    restore_value: yes
+    initial_value: 'false'
+
+  - id: ostatnia_pozycja_opublikowana
+    type: int
+    restore_value: no
+    initial_value: '-1'
+
+number:
+  - platform: template
+    name: "Czas przejazdu bramy"
+    id: czas_przejazdu_number
+    icon: "mdi:timer-edit"
+    unit_of_measurement: "s"
+    min_value: 5
+    max_value: 60
+    step: 1
+    optimistic: true
+    initial_value: 17
+    set_action:
+      - lambda: |-
+          id(czas_przejazdu_s) = (int)x;
+
+switch:
+  - platform: gpio
+    id: switch_gpio_1
+    name: "Brama — przekaźnik"
+    pin: 32
+    internal: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: switch_gpio_2
+    name: "Furtka — przekaźnik"
+    pin: 33
+    internal: true
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: switch_gpio_3
+    name: "Relay 3"
+    pin: 25
+    restore_mode: ALWAYS_OFF
+
+  - platform: gpio
+    id: switch_gpio_4
+    name: "Relay 4"
+    pin: 26
+    restore_mode: ALWAYS_OFF
+
+script:
+  - id: impuls_bramy
+    mode: single
+    then:
+      - switch.turn_on: switch_gpio_1
+      - delay: 500ms
+      - switch.turn_off: switch_gpio_1
+
+  - id: impuls_furtki
+    mode: single
+    then:
+      - switch.turn_on: switch_gpio_2
+      - delay: 500ms
+      - switch.turn_off: switch_gpio_2
+
+  - id: kalibracja_reczna_start
+    mode: single
+    then:
+      - lambda: |-
+          id(kalibracja_reczna) = true;
+
+          if (id(pozycja_bramy) <= 5.0f) {
+            id(kierunek_ruchu) = "opening";
+            id(ostatnia_aktualizacja_ms) = millis();
+            id(status_bramy).publish_state("Otwieranie — przygotowanie kalibracji");
+          } else {
+            id(kierunek_ruchu) = "closing";
+            id(pozycja_start_zamykania) = id(pozycja_bramy);
+            id(poczatek_zamykania_ms) = millis();
+            id(ostatnia_zmiana_sca_ms) = millis();
+            id(fotokomorka_podczas_zamykania) = false;
+            id(ostatnia_aktualizacja_ms) = millis();
+            id(status_bramy).publish_state("Zamykanie — kalibracja");
+          }
+      - script.execute: impuls_bramy
+
+binary_sensor:
+  - platform: gpio
+    id: stan_aux_sca
+    name: "SCA — stan surowy"
+    pin:
+      number: 22
+      mode: INPUT_PULLUP
+      inverted: true
+    internal: true
+    filters:
+      - delayed_on: 80ms
+      - delayed_off: 80ms
+
+    on_press:
+      - lambda: |-
+          id(ostatnia_zmiana_sca_ms) = millis();
+
+          if (id(kierunek_ruchu) == "closing") {
+            return;
+          }
+
+          if (id(kierunek_ruchu) == "idle" &&
+              id(pozycja_bramy) <= 5.0f) {
+            id(kierunek_ruchu) = "opening";
+            id(ostatnia_aktualizacja_ms) = millis();
+            id(status_bramy).publish_state("Otwieranie");
+          }
+
+    on_release:
+      - lambda: |-
+          id(ostatnia_zmiana_sca_ms) = millis();
+
+          if (id(kierunek_ruchu) == "idle" &&
+              id(pozycja_bramy) > 5.0f) {
+            id(kierunek_ruchu) = "closing";
+            id(pozycja_start_zamykania) = id(pozycja_bramy);
+            id(poczatek_zamykania_ms) = millis();
+            id(fotokomorka_podczas_zamykania) = false;
+            id(ostatnia_aktualizacja_ms) = millis();
+            id(status_bramy).publish_state("Zamykanie");
+          }
+
+  - platform: gpio
+    id: foto_state
+    name: "Fotokomórka — przeszkoda"
+    pin:
+      number: 23
+      mode: INPUT_PULLUP
+      inverted: true
+    device_class: safety
+    filters:
+      - delayed_on: 50ms
+      - delayed_off: 100ms
+
+    on_press:
+      - lambda: |-
+          if (id(kierunek_ruchu) == "closing") {
+            id(fotokomorka_podczas_zamykania) = true;
+          }
+
+  - platform: status
+    name: "Status połączenia bramy"
+
+interval:
+  - interval: 250ms
+    then:
+      - lambda: |-
+          const unsigned long now = millis();
+
+          if (id(ostatnia_aktualizacja_ms) == 0) {
+            id(ostatnia_aktualizacja_ms) = now;
+          }
+
+          unsigned long dt = now - id(ostatnia_aktualizacja_ms);
+          id(ostatnia_aktualizacja_ms) = now;
+
+          if (dt > 1000) {
+            dt = 1000;
+          }
+
+          const int czas_s = id(czas_przejazdu_s);
+          if (czas_s < 5 || czas_s > 60) {
+            return;
+          }
+
+          const float zmiana =
+              (100.0f * (float)dt) / ((float)czas_s * 1000.0f);
+
+          if (id(kierunek_ruchu) == "opening") {
+            id(pozycja_bramy) += zmiana;
+
+            if (id(pozycja_bramy) >= 100.0f) {
+              id(pozycja_bramy) = 100.0f;
+              id(kierunek_ruchu) = "idle";
+
+              if (id(stan_aux_sca).state) {
+                id(status_bramy).publish_state("Otwarta");
+              } else {
+                id(status_bramy).publish_state(
+                  "Brak potwierdzenia pełnego otwarcia"
+                );
+              }
+
+              if (id(kalibracja_reczna)) {
+                id(kierunek_ruchu) = "closing";
+                id(pozycja_start_zamykania) = id(pozycja_bramy);
+                id(poczatek_zamykania_ms) = now;
+                id(ostatnia_zmiana_sca_ms) = now;
+                id(fotokomorka_podczas_zamykania) = false;
+                id(ostatnia_aktualizacja_ms) = now;
+                id(status_bramy).publish_state("Zamykanie — kalibracja");
+                id(impuls_bramy).execute();
+              }
+            }
+          }
+
+          else if (id(kierunek_ruchu) == "closing") {
+            id(pozycja_bramy) -= zmiana;
+
+            if (id(pozycja_bramy) < 0.0f) {
+              id(pozycja_bramy) = 0.0f;
+            }
+
+            if (id(fotokomorka_podczas_zamykania) &&
+                id(stan_aux_sca).state &&
+                (now - id(ostatnia_zmiana_sca_ms)) >= 1500) {
+
+              id(kierunek_ruchu) = "opening";
+              id(ostatnia_aktualizacja_ms) = now;
+              id(status_bramy).publish_state(
+                "Otwieranie — cofnięcie po fotokomórce"
+              );
+              id(kalibracja_reczna) = false;
+              return;
+            }
+
+            const unsigned long czas_ruchu =
+                now - id(poczatek_zamykania_ms);
+
+            const bool wystarczajacy_czas =
+                czas_ruchu >= ((unsigned long)czas_s * 700);
+
+            const bool sca_stabilnie_off =
+                !id(stan_aux_sca).state &&
+                (now - id(ostatnia_zmiana_sca_ms)) >= 1500;
+
+            if (wystarczajacy_czas && sca_stabilnie_off) {
+              const int zmierzony_czas =
+                  (int)(czas_ruchu / 1000UL);
+
+              const bool pelny_przejazd =
+                  id(pozycja_start_zamykania) >= 90.0f;
+
+              const bool pomiar_dopuszczalny =
+                  pelny_przejazd &&
+                  !id(fotokomorka_podczas_zamykania) &&
+                  zmierzony_czas >= 5 &&
+                  zmierzony_czas <= 60;
+
+              if ((id(kalibracja_reczna) ||
+                   id(kalibracja_tygodniowa)) &&
+                  pomiar_dopuszczalny) {
+
+                id(czas_przejazdu_s) = zmierzony_czas;
+                id(czas_przejazdu_number).publish_state(
+                  zmierzony_czas
+                );
+                id(status_bramy).publish_state(
+                  "Zamknięta — kalibracja: " +
+                  to_string(zmierzony_czas) + " s"
+                );
+
+                id(kalibracja_reczna) = false;
+                id(kalibracja_tygodniowa) = false;
+              } else {
+                id(status_bramy).publish_state("Zamknięta");
+                id(kalibracja_reczna) = false;
+              }
+
+              id(pozycja_bramy) = 0.0f;
+              id(kierunek_ruchu) = "idle";
+              id(fotokomorka_podczas_zamykania) = false;
+            }
+
+            else if (czas_ruchu >=
+                     ((unsigned long)czas_s * 1000UL)) {
+              id(status_bramy).publish_state(
+                "Zamykanie — brak potwierdzenia końca ruchu"
+              );
+            }
+          }
+
+  - interval: 1s
+    then:
+      - lambda: |-
+          const int p = (int)(id(pozycja_bramy) + 0.5f);
+
+          if (id(kierunek_ruchu) == "opening") {
+            id(status_bramy).publish_state(
+              "Otwieranie " + to_string(p) + "%"
+            );
+          } else if (id(kierunek_ruchu) == "closing") {
+            id(status_bramy).publish_state(
+              "Zamykanie " + to_string(p) + "%"
+            );
+          }
+
+          if (p != id(ostatnia_pozycja_opublikowana)) {
+            id(ostatnia_pozycja_opublikowana) = p;
+          }
+
+button:
+  - platform: template
+    name: "Otwórz / Zamknij bramę"
+    icon: "mdi:gate"
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(kierunek_ruchu) == "idle";'
+          then:
+            - lambda: |-
+                id(fotokomorka_podczas_zamykania) = false;
+
+                if (id(pozycja_bramy) <= 5.0f) {
+                  id(kierunek_ruchu) = "opening";
+                  id(ostatnia_aktualizacja_ms) = millis();
+                  id(status_bramy).publish_state("Otwieranie");
+                } else {
+                  id(kierunek_ruchu) = "closing";
+                  id(pozycja_start_zamykania) = id(pozycja_bramy);
+                  id(poczatek_zamykania_ms) = millis();
+                  id(ostatnia_zmiana_sca_ms) = millis();
+                  id(ostatnia_aktualizacja_ms) = millis();
+                  id(status_bramy).publish_state("Zamykanie");
+                }
+            - script.execute: impuls_bramy
+
+  - platform: template
+    name: "Otwórz jako furtkę"
+    icon: "mdi:door"
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(kierunek_ruchu) == "idle";'
+          then:
+            - lambda: |-
+                id(kierunek_ruchu) = "opening";
+                id(ostatnia_aktualizacja_ms) = millis();
+                id(status_bramy).publish_state(
+                  "Otwieranie — polecenie furtki"
+                );
+            - script.execute: impuls_furtki
+
+  - platform: template
+    name: "Kalibruj czas zamykania"
+    icon: "mdi:tune-variant"
+    on_press:
+      - if:
+          condition:
+            lambda: 'return id(kierunek_ruchu) == "idle";'
+          then:
+            - script.execute: kalibracja_reczna_start
+
+  - platform: restart
+    name: "Restart ESP32 — brama wjazdowa"
+    icon: "mdi:restart"
+
+text_sensor:
+  - platform: template
+    name: "Dokładny stan bramy"
+    id: status_bramy
+    icon: "mdi:gate"
+    update_interval: never
+
+sensor:
+  - platform: template
+    name: "Pozycja bramy"
+    id: pozycja_bramy_sensor
+    unit_of_measurement: "%"
+    icon: "mdi:gate"
+    accuracy_decimals: 0
+    update_interval: 1s
+    lambda: |-
+      return id(pozycja_bramy);
+
+  - platform: wifi_signal
+    name: "Sygnał WiFi bramy"
+    update_interval: 60s
