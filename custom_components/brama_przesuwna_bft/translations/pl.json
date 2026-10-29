@@ -4,13 +4,22 @@
       "user": {
         "title": "Brama przesuwna BFT",
         "description": "Podstawowa konfiguracja integracji bramy przesuwnej BFT.",
-        "data": {
-          "name": "Nazwa"
-        }
+        "data": {}
       }
     },
     "abort": {
       "already_configured": "Integracja jest już skonfigurowana."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Ustawienia bramy",
+        "description": "Wybierz, czy karta ma udostępniać sterowanie furtką.",
+        "data": {
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
+        }
+      }
     }
   }
 }
