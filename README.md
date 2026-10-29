@@ -1,41 +1,53 @@
 # Brama przesuwna BFT — Home Assistant + ESPHome
 
-Sterowanie bramą przesuwną przez ESP32 Relay X4 i Home Assistant.
+Projekt sterowania bramą przesuwną przez ESP32 Relay X4 i Home Assistant.
 
-## Status projektu
+## Instalacja integracji przez HACS (ręczne repozytorium)
 
-To pierwsza wersja robocza projektu oparta na działającej instalacji użytkownika. Testowana konfiguracja:
-- napęd: **BFT DEIMOS ULTRA BT B 600**;
-- płytka: **ESP32 Relay X4 (AC/DC)**;
-- firmware: ESPHome;
-- interfejs: karta Lovelace oparta na `custom:button-card`.
+Repozytorium **nie jest zgłaszane do oficjalnego katalogu HACS**. Dodaj je ręcznie:
 
-Nie zakładaj zgodności z każdym napędem. Sterownik bramy musi obsługiwać wejście impulsowe/przyciskowe. Sposób podłączenia zależy od konkretnego napędu; przed montażem sprawdź jego instrukcję i parametry elektryczne. Nie podłączaj GPIO ESP32 bezpośrednio do obwodów napędu.
+1. Otwórz **HACS → ⋮ → Custom repositories**.
+2. W polu repozytorium wpisz `https://github.com/MarLip1981/Brama-przesuwna-BFT`.
+3. Jako kategorię wybierz **Integration** i zatwierdź.
+4. Znajdź „Brama przesuwna BFT” w HACS i zainstaluj.
+5. Uruchom ponownie Home Assistant.
+6. Otwórz **Ustawienia → Urządzenia i usługi → Dodaj integrację** i wybierz „Brama przesuwna BFT”.
 
-## Pliki
+**Uwaga:** obecna integracja HACS jest szkieletem instalacyjnym. Nie konfiguruje jeszcze napędu ani nie wgrywa firmware. Właściwy konfigurator i instalator dodamy w następnym etapie.
 
-- [Firmware ESPHome](esphome/brama-wjazdowa.yaml)
-- [Karta Lovelace](lovelace/brama-wjazdowa.yaml)
+## Pliki projektu
 
-Konfigurator i instalator zostaną dodane w kolejnych etapach.
+- [Firmware ESPHome](esphome/brama-wjazdowa.yaml) — wgrywany osobno na ESP32.
+- [Karta Lovelace](lovelace/brama-wjazdowa.yaml) — dodawana osobno do pulpitu Home Assistant.
+- [Integracja Home Assistant](custom_components/brama_przesuwna_bft/) — instalowana przez HACS.
 
-## Ważne przed użyciem
+## Testowana konfiguracja
 
-1. Uzupełnij wymagane sekrety w pliku `secrets.yaml` ESPHome:
-   - `wifi_ssid`
-   - `wifi_password`
-   - `wifi_backup_ssid`
-   - `wifi_backup_pass`
-   - `api_encryption_key`
-2. Sprawdź mapowanie pinów i logikę wejść na swojej płytce.
-3. Firmware szacuje pozycję na podstawie czasu ruchu. Procent nie pochodzi z enkodera i może odbiegać od rzeczywistego położenia.
-4. Wejścia SCA i fotokomórki wymagają prawidłowego, bezpiecznego dopasowania sygnałów. Projekt nie zastępuje zabezpieczeń napędu.
-5. Najpierw testuj przy zapewnionym bezpiecznym dostępie do zatrzymania napędu i bez osób ani przedmiotów w świetle bramy.
+- Napęd: **BFT DEIMOS ULTRA BT B 600**.
+- Płytka: **ESP32 Relay X4 (AC/DC)**.
+- Firmware: ESPHome.
+- Karta Lovelace: `custom:button-card` (wymaga zainstalowanej karty Button Card).
 
-## Encje Home Assistant
+Nie zakładaj zgodności z każdym napędem. Przed montażem sprawdź instrukcję konkretnego napędu i parametry elektryczne. Nie podłączaj GPIO ESP32 bezpośrednio do obwodów napędu.
 
-Karta w tej wersji korzysta z encji tworzonych przez konfigurację ESPHome. Jeśli zmienisz nazwę urządzenia lub encji, dostosuj identyfikatory w YAML karty.
+## Wymagane sekrety ESPHome
 
-## Licencja
+W pliku `secrets.yaml` ESPHome ustaw:
 
-Licencja projektu nie została jeszcze określona.
+- `wifi_ssid`
+- `wifi_password`
+- `wifi_backup_ssid`
+- `wifi_backup_pass`
+- `brama_wjazdowa__encryption_key`
+
+## Ważne informacje o bezpieczeństwie
+
+1. Sprawdź mapowanie pinów i logikę wejść na swojej płytce.
+2. Pozycja bramy jest szacowana na podstawie czasu ruchu; procent nie pochodzi z enkodera i może odbiegać od rzeczywistego położenia.
+3. Wejścia SCA i fotokomórki wymagają prawidłowego, bezpiecznego dopasowania sygnałów.
+4. Projekt nie zastępuje fabrycznych zabezpieczeń napędu ani fotokomórki.
+5. Pierwsze testy wykonuj przy zapewnionym dostępie do zatrzymania napędu, bez osób i przedmiotów w świetle bramy.
+
+## Status
+
+Projekt jest rozwijany etapami. Konfigurator i instalator automatyzujący przygotowanie ESPHome oraz karty Lovelace nie są jeszcze dostępne.
