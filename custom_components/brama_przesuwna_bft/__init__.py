@@ -12,7 +12,7 @@ from homeassistant.components.http import StaticPathConfig
 from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js?v=0.1.0"
+_CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js?v=0.1.1"
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 
 
@@ -28,12 +28,13 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
 
 async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
-    """Register the card resource when Lovelace uses storage mode."""
+    """Register or update the card resource in Lovelace storage mode."""
     lovelace_data = hass.data.get("lovelace")
     if lovelace_data is None:
         _LOGGER.warning(
-            "Karta Brama przesuwna BFT: Lovelace nie jest dostępny; "
-            "zasób może wymagać ręcznego dodania w Ustawienia → Pulpity."
+            "Karta Brama przesuwna BFT: Lovelace nie jest dostępny podczas "
+            "uruchamiania integracji. Zasób wymaga ręcznego dodania: %s",
+            _CARD_URL,
         )
         return
 
@@ -41,26 +42,47 @@ async def _async_register_lovelace_resource(hass: HomeAssistant) -> None:
     if resources is None and isinstance(lovelace_data, dict):
         resources = lovelace_data.get("resources")
     if resources is None:
-        _LOGGER.warning(
-            "Karta Brama przesuwna BFT: nie znaleziono kolekcji zasobów Lovelace."
-        )
+        _LOGGER.warning("Nie znaleziono zasobów Lovelace dla karty Brama przesuwna BFT.")
         return
 
     try:
-        # ResourceStorageCollection is lazy-loaded on current Home Assistant.
-        if hasattr(resources, "async_load") and not getattr(resources, "loaded", True):
+        # ResourceStorageCollection is lazy-loaded. Load it explicitly before
+        # reading or writing, otherwise a create can overwrite existing resources.
+        if hasattr(resources, "async_load"):
             await resources.async_load()
+
         items = resources.async_items()
         if hasattr(items, "__await__"):
             items = await items
-        if any(item.get("url", "").split("?")[0] == _CARD_URL.split("?")[0] for item in items):
+
+        matching = [
+            item for item in items
+            if item.get("url", "").split("?")[0] == _CARD_URL.split("?")[0]
+        ]
+        if matching:
+            current = matching[0]
+            if current.get("url") != _CARD_URL:
+                await resources.async_update_item(
+                    current["id"],
+                    {"res_type": "module", "url": _CARD_URL},
+                )
+                _LOGGER.info("Zaktualizowano zasób karty Brama przesuwna BFT.")
             return
+
+        if not hasattr(resources, "async_create_item"):
+            _LOGGER.warning(
+                "Lovelace nie obsługuje automatycznej rejestracji zasobów w tym trybie. "
+                "Dodaj ręcznie zasób typu JavaScript module: %s",
+                _CARD_URL,
+            )
+            return
+
         await resources.async_create_item({"res_type": "module", "url": _CARD_URL})
-        _LOGGER.info("Automatycznie dodano kartę Brama przesuwna BFT do zasobów Lovelace.")
-    except (AttributeError, RuntimeError, TypeError, ValueError) as err:
+        _LOGGER.info("Zarejestrowano zasób karty Brama przesuwna BFT: %s", _CARD_URL)
+    except Exception as err:
         _LOGGER.warning(
-            "Nie udało się automatycznie zarejestrować karty Lovelace: %s. "
-            "Możesz dodać zasób %s ręcznie w Ustawienia → Pulpity → Zasoby.",
+            "Nie udało się zarejestrować zasobu karty Brama przesuwna BFT: %s. "
+            "W razie potrzeby dodaj ręcznie zasób typu JavaScript module: %s",
             err,
             _CARD_URL,
         )
