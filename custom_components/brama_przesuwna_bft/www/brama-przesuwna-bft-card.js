@@ -1,4 +1,4 @@
-import { LitElement, html, css } from "https://unpkg.com/lit@3/index.js?module";
+import { LitElement, html, css } from "lit";
 
 const DOMAIN = "brama_przesuwna_bft";
 const DEFAULT_POSITION = "sensor.wjazd_brama_wjazdowa_pozycja_bramy";
