@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Ustawienia bramy",
-        "description": "Ustaw podstawowe działanie karty. Powiadomienia skonfigurujesz osobno po dodaniu integracji.",
+        "description": "Skonfiguruj działanie bramy oraz powiadomienia. Poszczególne opcje znajdziesz w odpowiednich sekcjach.",
         "data": {
           "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
           "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
@@ -19,6 +19,7 @@
     "step": {
       "init": {
         "title": "Ustawienia bramy",
+        "description": "Skonfiguruj działanie bramy oraz powiadomienia. Poszczególne opcje znajdziesz w odpowiednich sekcjach.",
         "menu_options": {
           "gate": "Karta i działanie bramy",
           "notifications": "Powiadomienia"
@@ -26,7 +27,7 @@
       },
       "gate": {
         "title": "Karta i działanie bramy",
-        "description": "Dostosuj wygląd działania karty do swojej instalacji.",
+        "description": "Dostosuj działanie karty do swojej instalacji.",
         "data": {
           "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
           "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
