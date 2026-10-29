@@ -3,9 +3,11 @@
   "config": {
     "step": {
       "user": {
-        "title": "Brama przesuwna BFT",
-        "description": "Dodaj integrację bramy przesuwnej BFT. Karta Lovelace zostanie zarejestrowana automatycznie.",
-        "data": {}
+        "title": "Podstawowe ustawienia bramy",
+        "description": "Wybierz, czy karta dashboardu ma udostępniać sterowanie furtką. To ustawienie możesz później zmienić w konfiguracji integracji.",
+        "data": {
+          "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
+        }
       }
     },
     "abort": {
@@ -16,7 +18,7 @@
     "step": {
       "init": {
         "title": "Ustawienia bramy",
-        "description": "Wybierz, czy karta ma udostępniać sterowanie furtką.",
+        "description": "Możesz w każdej chwili zmienić, czy karta dashboardu ma pokazywać przycisk furtki.",
         "data": {
           "pedestrian_mode_enabled": "Korzystaj z trybu furtki"
         }
