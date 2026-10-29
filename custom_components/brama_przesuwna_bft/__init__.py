@@ -13,7 +13,8 @@ from homeassistant.core import HomeAssistant
 from .const import DEFAULT_NAME, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-_CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js?v=0.1.4"
+_CARD_VERSION = "0.1.5"
+_CARD_URL = f"/brama_przesuwna_bft/brama-przesuwna-bft-card.js?v={_CARD_VERSION}"
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _STATIC_PATH = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
 
@@ -26,13 +27,12 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
         )
         _LOGGER.debug("Udostępniono plik karty Brama przesuwna BFT: %s", _STATIC_PATH)
     except (AttributeError, RuntimeError, OSError) as err:
-        # HA may already have registered this path after an integration reload.
         _LOGGER.warning("Nie udało się udostępnić pliku karty Lovelace: %s", err)
     return True
 
 
 async def _async_register_lovelace_resource(hass: HomeAssistant) -> bool:
-    """Register/update the card resource when Lovelace uses storage resources."""
+    """Register or update the card resource when Lovelace uses storage resources."""
     lovelace_data = hass.data.get("lovelace")
     if lovelace_data is None:
         _LOGGER.debug("Rejestracja karty: dane Lovelace nie są jeszcze dostępne.")
@@ -45,17 +45,14 @@ async def _async_register_lovelace_resource(hass: HomeAssistant) -> bool:
         _LOGGER.debug("Rejestracja karty: kolekcja zasobów Lovelace jest niedostępna.")
         return False
 
-    # YAML resource mode is read-only: it has no create/update methods.
     if not hasattr(resources, "async_create_item"):
         _LOGGER.error(
             "Nie można automatycznie dodać karty Brama przesuwna BFT: "
-            "zasoby Lovelace są w trybie YAML. Wymagany jest tryb zasobów storage."
+            "zasoby Lovelace są w trybie YAML lub nie obsługują zapisu."
         )
         return False
 
     try:
-        # ResourceStorageCollection is lazy-loaded; load it before reading or writing
-        # to avoid creating a collection that omits existing resources.
         if hasattr(resources, "async_load"):
             await resources.async_load()
 
@@ -71,18 +68,15 @@ async def _async_register_lovelace_resource(hass: HomeAssistant) -> bool:
             current = matching[0]
             if current.get("url") != _CARD_URL:
                 await resources.async_update_item(
-                    current["id"],
-                    {"res_type": "module", "url": _CARD_URL},
+                    current["id"], {"res_type": "module", "url": _CARD_URL}
                 )
-                _LOGGER.info("Zaktualizowano zasób karty Brama przesuwna BFT do wersji 0.1.4.")
-            else:
-                _LOGGER.debug("Zasób karty Brama przesuwna BFT jest już zarejestrowany.")
+                _LOGGER.info("Zaktualizowano zasób karty Brama przesuwna BFT do wersji %s.", _CARD_VERSION)
             return True
 
         await resources.async_create_item({"res_type": "module", "url": _CARD_URL})
         _LOGGER.info("Zarejestrowano zasób karty Brama przesuwna BFT: %s", _CARD_URL)
         return True
-    except Exception:  # noqa: BLE001
+    except Exception:
         _LOGGER.exception("Nie udało się zarejestrować zasobu karty Brama przesuwna BFT.")
         return False
 
