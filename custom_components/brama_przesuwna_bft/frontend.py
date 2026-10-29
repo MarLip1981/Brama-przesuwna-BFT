@@ -12,12 +12,12 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "1.9.4"
-_RESOURCE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
+_CARD_VERSION = "1.9.5"
+_CARD_MODULE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
 async def async_setup_frontend(hass: HomeAssistant) -> None:
-    """Serve the card and register it using the active Lovelace resource mode."""
+    """Serve the card and register it as a frontend extra module."""
     if not _CARD_PATH.is_file():
         _LOGGER.error("Brama przesuwna BFT: brakuje pliku karty: %s", _CARD_PATH)
         return
@@ -27,49 +27,17 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             [StaticPathConfig(_CARD_URL, str(_CARD_PATH), cache_headers=False)]
         )
     except Exception as err:  # noqa: BLE001
-        # A repeated setup can encounter a path that was already registered.
+        # Setup can run more than once during startup/reload.
         message = str(err).lower()
         if "already registered" not in message and "duplicate" not in message:
             _LOGGER.exception("Nie udało się udostępnić pliku karty BFT: %s", err)
             return
 
-    lovelace = hass.data.get("lovelace")
-    resources = getattr(lovelace, "resources", None) if lovelace else None
-    resource_mode = getattr(lovelace, "resource_mode", None) if lovelace else None
-
-    if resource_mode == "storage" and resources is not None:
-        try:
-            # ResourceStorageCollection loads lazily. Explicitly load it before
-            # inspecting or creating items; otherwise async_items() may be empty
-            # and creating an item can overwrite the user's existing resources.
-            await resources.async_load()
-            existing = next(
-                (
-                    item
-                    for item in resources.async_items()
-                    if item.get("url", "").split("?", 1)[0] == _CARD_URL
-                ),
-                None,
-            )
-            if existing is None:
-                await resources.async_create_item(
-                    {"res_type": "module", "url": _RESOURCE_URL}
-                )
-                _LOGGER.info("Dodano kartę BFT do zasobów Lovelace: %s", _RESOURCE_URL)
-            elif existing.get("url") != _RESOURCE_URL:
-                await resources.async_update_item(
-                    existing["id"],
-                    {"res_type": "module", "url": _RESOURCE_URL},
-                )
-                _LOGGER.info("Zaktualizowano zasób karty BFT: %s", _RESOURCE_URL)
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Nie udało się dodać karty BFT do zasobów Lovelace.")
-        return
-
-    # YAML resource mode is read-only, so use Home Assistant's extra-module
-    # mechanism there as the supported fallback.
+    # Do not mutate Lovelace's resource collection directly. Register the card
+    # through Home Assistant's frontend module mechanism, which also works when
+    # Lovelace resources are read-only/YAML-managed or not initialized yet.
     try:
-        add_extra_js_url(hass, _RESOURCE_URL)
-        _LOGGER.info("Zarejestrowano moduł karty BFT przez extra_module_url: %s", _RESOURCE_URL)
+        add_extra_js_url(hass, _CARD_MODULE_URL)
+        _LOGGER.info("Zarejestrowano moduł karty BFT: %s", _CARD_MODULE_URL)
     except Exception:  # noqa: BLE001
         _LOGGER.exception("Nie udało się zarejestrować modułu karty BFT.")
