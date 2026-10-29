@@ -1,6 +1,5 @@
 import { LitElement, html, css } from "lit";
 
-const DOMAIN = "brama_przesuwna_bft";
 const DEFAULT_POSITION = "sensor.wjazd_brama_wjazdowa_pozycja_bramy";
 const DEFAULT_STATUS = "sensor.brama_wjazdowa_dokladny_stan_bramy";
 const DEFAULT_MAIN = "button.brama_wjazdowa_otworz_zamknij_brame";
@@ -19,6 +18,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     .scene { margin:12px 0; padding:12px; border-radius:12px; background:var(--ha-card-background,var(--card-background-color)); border:1px solid var(--divider-color); }
     .track { height:12px; border-radius:8px; background:var(--disabled-color); overflow:hidden; margin-top:10px; }
     .position { height:100%; background:var(--primary-color); transition:width .3s ease; }
+    .track.right .position { margin-left:auto; }
     .meta { color:var(--secondary-text-color); font-size:13px; margin-top:5px; }
     .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .actions.single { grid-template-columns:1fr; }
@@ -38,12 +38,9 @@ class BramaPrzesuwnaBFTCard extends LitElement {
   }
 
   getCardSize() { return 3; }
-
   _state(entityId) { return this.hass?.states?.[entityId]?.state; }
-
   _press(entityId) {
-    if (!entityId || !this.hass) return;
-    this.hass.callService("button", "press", { entity_id: entityId });
+    if (entityId && this.hass) this.hass.callService("button", "press", { entity_id: entityId });
   }
 
   render() {
@@ -56,15 +53,17 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     const moving = /otwieranie|zamykanie/i.test(status);
     const open = /otwarta/i.test(status);
     const closed = /zamknięta/i.test(status);
-    const pedestrianEnabled = this.hass.states?.[PEDESTRIAN_MODE_ENTITY]?.state === "on";
+    const modeEntity = this.hass.states?.[PEDESTRIAN_MODE_ENTITY];
+    const pedestrianEnabled = modeEntity?.state === "on";
+    const direction = modeEntity?.attributes?.opening_direction || "left";
     const mainLabel = moving ? "Stop" : open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     return html`
       <ha-card>
         <div class="head"><h2>${this._config.name}</h2><div class="status">${status}${moving && pos !== null ? html` · ${pos}%` : ""}</div></div>
         <div class="scene">
           <div>Pozycja bramy: <strong>${pos === null ? "brak danych" : `${pos}%`}</strong></div>
-          <div class="track"><div class="position" style="width:${pos ?? 0}%"></div></div>
-          <div class="meta">Pozycja szacowana na podstawie czasu ruchu.</div>
+          <div class="track ${direction === "right" ? "right" : "left"}"><div class="position" style="width:${pos ?? 0}%"></div></div>
+          <div class="meta">Kierunek otwierania: ${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka). Pozycja szacowana na podstawie czasu ruchu.</div>
         </div>
         <div class="actions ${pedestrianEnabled ? "" : "single"}">
           <button @click=${() => this._press(this._config.main_button)}>${mainLabel}</button>
@@ -74,10 +73,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     `;
   }
 
-  static getConfigElement() {
-    return document.createElement("brama-przesuwna-bft-card-editor");
-  }
-
+  static getConfigElement() { return document.createElement("brama-przesuwna-bft-card-editor"); }
   static getStubConfig() { return {}; }
 }
 
@@ -102,6 +98,7 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
     return html`<div>${fields.map(([key, label, fallback]) => html`<div class="field"><label>${label}</label><input .value=${this._config[key] || fallback} @change=${ev => this._change(key, ev)} /></div>`)}</div>`;
   }
 }
+
 customElements.define("brama-przesuwna-bft-card", BramaPrzesuwnaBFTCard);
 customElements.define("brama-przesuwna-bft-card-editor", BramaPrzesuwnaBFTCardEditor);
 window.customCards = window.customCards || [];
