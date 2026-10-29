@@ -14,7 +14,7 @@ from homeassistant.helpers.event import async_call_later
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "1.9.0"
+_CARD_VERSION = "1.9.1"
 _RESOURCE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 _RETRY_DELAY = 5
 _MAX_RETRIES = 12
