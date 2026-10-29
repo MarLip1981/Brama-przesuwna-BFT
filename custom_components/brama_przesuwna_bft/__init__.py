@@ -45,10 +45,16 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
 
     state = new_state.state
     if state == "Otwarta":
-        enabled = entry.options.get(OPTION_NOTIFY_OPEN, False)
+        enabled = entry.options.get(
+            OPTION_NOTIFY_OPEN,
+            entry.data.get(OPTION_NOTIFY_OPEN, False),
+        )
         message = "Brama wjazdowa jest otwarta."
     elif state == "Zamknięta":
-        enabled = entry.options.get(OPTION_NOTIFY_CLOSED, False)
+        enabled = entry.options.get(
+            OPTION_NOTIFY_CLOSED,
+            entry.data.get(OPTION_NOTIFY_CLOSED, False),
+        )
         message = "Brama wjazdowa jest zamknięta."
     else:
         return
