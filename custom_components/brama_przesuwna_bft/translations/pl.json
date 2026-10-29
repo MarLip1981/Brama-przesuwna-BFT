@@ -1,0 +1,16 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Brama przesuwna BFT",
+        "description": "Podstawowa konfiguracja integracji bramy przesuwnej BFT.",
+        "data": {
+          "name": "Nazwa"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "Integracja jest już skonfigurowana."
+    }
+  }
+}
