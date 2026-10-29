@@ -1,7 +1,7 @@
 {
   "domain": "brama_przesuwna_bft",
   "name": "Brama przesuwna BFT",
-  "version": "1.9.4",
+  "version": "1.9.5",
   "documentation": "https://github.com/MarLip1981/Brama-przesuwna-BFT",
   "issue_tracker": "https://github.com/MarLip1981/Brama-przesuwna-BFT/issues",
   "config_flow": true,
