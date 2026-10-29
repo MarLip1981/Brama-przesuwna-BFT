@@ -36,9 +36,11 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
 
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is None:
+        # Load the card as an extra module even if Lovelace has not initialized
+        # its resource registry yet; setup is retried once HA has fully started.
+        add_extra_js_url(hass, _RESOURCE_URL)
         _LOGGER.warning(
-            "Plik karty BFT jest dostępny pod %s, ale Lovelace nie udostępnił zasobów.",
-            _CARD_URL,
+            "Lovelace nie udostępnił jeszcze rejestru zasobów; dodano kartę BFT jako dodatkowy moduł JS."
         )
         return
 
