@@ -5,6 +5,7 @@ const DEFAULT_POSITION = "sensor.wjazd_brama_wjazdowa_pozycja_bramy";
 const DEFAULT_STATUS = "sensor.brama_wjazdowa_dokladny_stan_bramy";
 const DEFAULT_MAIN = "button.brama_wjazdowa_otworz_zamknij_brame";
 const DEFAULT_PEDESTRIAN = "button.brama_wjazdowa_otworz_jako_furtke";
+const PEDESTRIAN_MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 
 class BramaPrzesuwnaBFTCard extends LitElement {
   static properties = { hass: {}, _config: {} };
@@ -20,6 +21,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     .position { height:100%; background:var(--primary-color); transition:width .3s ease; }
     .meta { color:var(--secondary-text-color); font-size:13px; margin-top:5px; }
     .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    .actions.single { grid-template-columns:1fr; }
     button { min-height:48px; border:0; border-radius:14px; padding:10px; background:var(--primary-color); color:var(--text-primary-color); font:inherit; font-weight:600; cursor:pointer; }
     button.secondary { background:var(--secondary-background-color); color:var(--primary-text-color); }
     button:disabled { opacity:.45; cursor:not-allowed; }
@@ -54,6 +56,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     const moving = /otwieranie|zamykanie/i.test(status);
     const open = /otwarta/i.test(status);
     const closed = /zamknięta/i.test(status);
+    const pedestrianEnabled = this.hass.states?.[PEDESTRIAN_MODE_ENTITY]?.state === "on";
     const mainLabel = moving ? "Stop" : open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     return html`
       <ha-card>
@@ -63,9 +66,9 @@ class BramaPrzesuwnaBFTCard extends LitElement {
           <div class="track"><div class="position" style="width:${pos ?? 0}%"></div></div>
           <div class="meta">Pozycja szacowana na podstawie czasu ruchu.</div>
         </div>
-        <div class="actions">
+        <div class="actions ${pedestrianEnabled ? "" : "single"}">
           <button @click=${() => this._press(this._config.main_button)}>${mainLabel}</button>
-          <button class="secondary" @click=${() => this._press(this._config.pedestrian_button)}>${open ? "Zamknij / steruj" : "Otwórz furtkę"}</button>
+          ${pedestrianEnabled ? html`<button class="secondary" @click=${() => this._press(this._config.pedestrian_button)}>Otwórz furtkę</button>` : ""}
         </div>
       </ha-card>
     `;
