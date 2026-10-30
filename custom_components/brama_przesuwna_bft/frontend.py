@@ -1,4 +1,4 @@
-"""Serve and register the BFT Lovelace card, following the AtlasCube resource pattern."""
+"""Serve and register the BFT Lovelace card."""
 from __future__ import annotations
 
 import logging
@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "1.12.2"
+_CARD_VERSION = "1.12.3"
 _CARD_MODULE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
@@ -32,19 +32,17 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             _LOGGER.exception("Nie udało się udostępnić pliku karty BFT: %s", err)
             return
 
-    # Load the module through the frontend bootstrap as well as the Lovelace resource registry.
-    # This makes the custom card available in the card picker even if storage resources
-    # were already initialized before the integration registered its resource.
-    add_extra_js_url(hass, _CARD_MODULE_URL)
-
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is None:
-        _LOGGER.debug("Lovelace nie jest jeszcze gotowe; rejestracja zasobu zostanie ponowiona po starcie HA.")
+        _LOGGER.debug(
+            "Lovelace nie jest jeszcze gotowe; rejestracja zasobu zostanie ponowiona po starcie HA."
+        )
         return
 
     if getattr(lovelace, "resource_mode", "storage") == "yaml":
+        # YAML resources are read-only, so use the frontend bootstrap as a fallback.
         add_extra_js_url(hass, _CARD_MODULE_URL)
-        _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS.")
+        _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS (tryb YAML).")
         return
 
     resources = getattr(lovelace, "resources", None)
