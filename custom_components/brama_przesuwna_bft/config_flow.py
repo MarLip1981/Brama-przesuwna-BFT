@@ -147,9 +147,50 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         """Show separate settings sections."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["gate", "notifications"],
+            menu_options=["device", "gate", "notifications"],
         )
 
+    async def async_step_device(self, user_input=None):
+        """Discover or reselect the ESPHome gate controller."""
+        nodes = discover_esphome_gate_nodes(self.hass)
+        if not nodes:
+            return self.async_show_form(
+                step_id="device",
+                data_schema=vol.Schema({}),
+                errors={"base": "no_matching_esphome_device"},
+            )
+
+        if user_input is not None:
+            selected_id = user_input.get("esphome_device", nodes[0]["device_id"])
+            selected = next((node for node in nodes if node["device_id"] == selected_id), None)
+            if selected is None:
+                return self.async_abort(reason="device_not_found")
+            values = {
+                "esphome_device_id": selected["device_id"],
+                "esphome_node_id": selected["node_id"],
+                "esphome_device_name": selected["name"],
+                "esphome_entities": selected["entities"],
+            }
+            return self.async_create_entry(
+                title="",
+                data={**self.config_entry.options, **values},
+            )
+
+        schema = {}
+        if len(nodes) > 1:
+            schema[vol.Required("esphome_device")] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {"value": node["device_id"], "label": node["name"]}
+                        for node in nodes
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            )
+        return self.async_show_form(
+            step_id="device",
+            data_schema=vol.Schema(schema),
+        )
     async def async_step_gate(self, user_input=None):
         """Configure the gate card without overwriting notification options."""
         if user_input is not None:
