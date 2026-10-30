@@ -32,6 +32,11 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             _LOGGER.exception("Nie udało się udostępnić pliku karty BFT: %s", err)
             return
 
+    # Load the module through the frontend bootstrap as well as the Lovelace resource registry.
+    # This makes the custom card available in the card picker even if storage resources
+    # were already initialized before the integration registered its resource.
+    add_extra_js_url(hass, _CARD_MODULE_URL)
+
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is None:
         _LOGGER.debug("Lovelace nie jest jeszcze gotowe; rejestracja zasobu zostanie ponowiona po starcie HA.")
