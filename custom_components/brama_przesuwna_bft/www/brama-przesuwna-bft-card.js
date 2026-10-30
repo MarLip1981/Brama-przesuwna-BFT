@@ -105,8 +105,6 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
       // Do not depend on the user-defined ESPHome node/project name.
       // First associate ESPHome config entries with device registry records,
       // then rank candidates by BFT-specific metadata and their actual entities.
-      const esphomeEntries = (this._hass.connection?.options?.config?.components || []).includes("esphome")
-        ? null : null; // Registry metadata below is authoritative; no project name is assumed.
       const entityRows = entities || [];
       const candidates = (devices || []).map(d => {
         const owned = entityRows.filter(e => e.device_id === d.id ||
