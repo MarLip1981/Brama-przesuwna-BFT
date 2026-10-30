@@ -12,6 +12,9 @@
     },
     "abort": {
       "single_instance_allowed": "This integration is already configured."
+    },
+    "error": {
+      "no_matching_esphome_device": "No ESPHome device with the BFT project identifier was found. Add project metadata to the firmware and restart the controller."
     }
   },
   "options": {
@@ -22,6 +25,45 @@
         "data": {
           "pedestrian_mode_enabled": "Enable pedestrian-gate mode",
           "opening_direction": "Opening direction (viewed from the yard)"
+        },
+        "menu_options": {
+          "device": "ESPHome controller",
+          "gate": "Gate card settings",
+          "notifications": "Notifications"
+        }
+      },
+      "device": {
+        "title": "Select ESPHome controller",
+        "description": "Select the controller identified by the firmware project marker.",
+        "data": {
+          "esphome_device": "Gate controller"
+        }
+      },
+      "entities": {
+        "title": "Correct device entities",
+        "description": "Review automatically detected entities. You can override each role.",
+        "data": {
+          "status": "Gate status",
+          "position": "Gate position",
+          "main_button": "Gate control",
+          "pedestrian_button": "Pedestrian gate control"
+        }
+      },
+      "gate": {
+        "title": "Gate card settings",
+        "description": "Adjust the card to your installation.",
+        "data": {
+          "pedestrian_mode_enabled": "Show pedestrian-gate button",
+          "opening_direction": "Opening direction (viewed from the yard)"
+        }
+      },
+      "notifications": {
+        "title": "Notifications",
+        "description": "Choose when and where gate notifications are sent.",
+        "data": {
+          "notify_when_open": "Notify when gate opens",
+          "notify_when_closed": "Notify when gate closes",
+          "notify_targets": "Notification services"
         }
       }
     }
