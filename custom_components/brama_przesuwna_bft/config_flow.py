@@ -8,6 +8,7 @@ from homeassistant import config_entries
 from homeassistant.helpers import selector
 
 from .discovery import discover_esphome_gate_nodes
+from homeassistant.helpers import entity_registry as er
 
 from .const import (
     DEFAULT_NAME,
@@ -141,7 +142,7 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if not mapped.get("status") or not mapped.get("position") or not mapped.get("main_button"):
                 return self.async_show_form(
                     step_id="entities",
-                    data_schema=self._entities_schema(node, roles, user_input),
+                    data_schema=self._entities_schema(node, roles, user_input, self.hass),
                     errors={"base": "required_entities"},
                     description_placeholders={"device": node["name"]},
                 )
@@ -162,19 +163,35 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         defaults = {**node["entities"], OPTION_OPENING_DIRECTION: "right"}
         return self.async_show_form(
             step_id="entities",
-            data_schema=self._entities_schema(node, roles, defaults),
+            data_schema=self._entities_schema(node, roles, defaults, self.hass),
             description_placeholders={"device": node["name"]},
         )
 
     @staticmethod
-    def _entities_schema(node, roles, defaults):
-        """Build role selectors restricted to entities belonging to the selected device."""
+    def _entities_schema(node, roles, defaults, hass=None):
+        """Build reliable dropdowns from the selected ESPHome device registry entries."""
         schema = {}
+        registry = er.async_get(hass) if hass is not None else None
+        entries = set(node.get("config_entry_ids", []))
         for role, (label, domains) in roles.items():
+            options = []
+            if registry is not None:
+                for entity in registry.entities.values():
+                    if entity.platform != "esphome":
+                        continue
+                    if entity.device_id != node["device_id"] and entity.config_entry_id not in entries:
+                        continue
+                    if entity.entity_id.split(".", 1)[0] not in domains:
+                        continue
+                    options.append({
+                        "value": entity.entity_id,
+                        "label": entity.name or entity.original_name or entity.entity_id,
+                    })
+            options.sort(key=lambda item: (item["label"].casefold(), item["value"]))
             default = defaults.get(role) or node["entities"].get(role)
             key = vol.Optional(role, default=default) if default else vol.Optional(role)
-            schema[key] = selector.EntitySelector(
-                selector.EntitySelectorConfig(filter=[{"device": node["device_id"], "domain": domains}])
+            schema[key] = selector.SelectSelector(
+                selector.SelectSelectorConfig(options=options, mode=selector.SelectSelectorMode.DROPDOWN)
             )
         schema[vol.Required(OPTION_OPENING_DIRECTION, default=defaults.get(OPTION_OPENING_DIRECTION, "right"))] = selector.SelectSelector(
             selector.SelectSelectorConfig(
@@ -261,28 +278,18 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         saved = self.config_entry.options.get(
             "esphome_entities", self.config_entry.data.get("esphome_entities", {})
         )
-        labels = {
-            "status": "Stan bramy",
-            "position": "Pozycja bramy",
-            "main_button": "Sterowanie bramą",
-            "pedestrian_button": "Sterowanie furtką",
+        roles = {
+            "status": ("Stan bramy", ["sensor"]),
+            "position": ("Pozycja bramy", ["sensor"]),
+            "main_button": ("Sterowanie bramą", ["button"]),
+            "pedestrian_button": ("Sterowanie furtką", ["button"]),
         }
-        domains = {
-            "status": ["sensor", "text_sensor"],
-            "position": ["sensor"],
-            "main_button": ["button"],
-            "pedestrian_button": ["button"],
-        }
-        schema = {}
-        for role, label in labels.items():
-            default = saved.get(role, node["entities"].get(role))
-            key = vol.Optional(role, default=default) if default else vol.Optional(role)
-            schema[key] = selector.EntitySelector(
-                selector.EntitySelectorConfig(filter=[{"device": node["device_id"], "domain": domains[role]}])
-            )
+        defaults = {**node["entities"], **saved}
         return self.async_show_form(
             step_id="entities",
-            data_schema=vol.Schema(schema),
+            data_schema=BramaPrzesuwnaBFTConfigFlow._entities_schema(
+                node, roles, defaults, self.hass
+            ),
             description_placeholders={"device": node["name"]},
         )
 
