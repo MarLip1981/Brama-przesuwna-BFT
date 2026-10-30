@@ -58,7 +58,7 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
         ]
         if matching:
             primary = matching[0]
-            if primary.get("url") != _CARD_MODULE_URL or primary.get("res_type") != "module":
+            if primary.get("url") != _CARD_MODULE_URL or primary.get("type") != "module":
                 await resources.async_update_item(
                     primary["id"], {"res_type": "module", "url": _CARD_MODULE_URL}
                 )
