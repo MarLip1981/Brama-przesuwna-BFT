@@ -43,4 +43,9 @@ class PedestrianModeSensor(BinarySensorEntity):
     @property
     def extra_state_attributes(self) -> dict:
         """Expose the configured opening direction to the card."""
-        return {"opening_direction": self._option(OPTION_OPENING_DIRECTION, "left")}
+        return {
+            "opening_direction": self._option(OPTION_OPENING_DIRECTION, "left"),
+            "esphome_device": self._entry.data.get("esphome_device_name"),
+            "esphome_node_id": self._entry.data.get("esphome_node_id"),
+            "entities": self._entry.data.get("esphome_entities", {}),
+        }
