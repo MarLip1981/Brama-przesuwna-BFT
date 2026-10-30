@@ -3,16 +3,30 @@
   "config": {
     "step": {
       "user": {
-        "title": "Ustawienia bramy",
-        "description": "Ustaw kierunek otwierania bramy i dostępność przycisku furtki. Encje sterownika zostaną wykryte w edytorze karty.",
+        "title": "Wykrywanie sterownika bramy",
+        "description": "Wybierz wykryty sterownik ESPHome. Następnie sprawdzisz i przypiszesz jego encje.",
         "data": {
-          "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
-          "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
+          "esphome_device": "Sterownik bramy ESPHome"
+        }
+      },
+      "entities": {
+        "title": "Przypisanie encji bramy",
+        "description": "Sprawdź automatycznie wykryte encje sterownika {device}. Wymagane są stan, pozycja i sterowanie bramą. Furtka jest opcjonalna.",
+        "data": {
+          "status": "Stan bramy",
+          "position": "Pozycja bramy",
+          "main_button": "Sterowanie bramą",
+          "pedestrian_button": "Sterowanie furtką (opcjonalnie)",
+          "opening_direction": "Kierunek otwierania (patrząc od podwórka)"
         }
       }
     },
     "abort": {
-      "single_instance_allowed": "Integracja jest już skonfigurowana."
+      "single_instance_allowed": "Integracja jest już skonfigurowana.",
+      "device_not_found": "Wybrane urządzenie ESPHome nie jest już dostępne."
+    },
+    "error": {
+      "required_entities": "Wskaż encje stanu, pozycji i sterowania bramą."
     }
   },
   "options": {
