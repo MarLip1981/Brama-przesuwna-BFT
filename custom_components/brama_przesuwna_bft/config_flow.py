@@ -7,6 +7,8 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.helpers import selector
 
+from .discovery import discover_esphome_gate_nodes
+
 from .const import (
     DEFAULT_NAME,
     DEFAULT_NOTIFY_TARGET,
@@ -89,20 +91,47 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
 
+        nodes = discover_esphome_gate_nodes(self.hass)
+        if not nodes:
+            return self.async_show_form(
+                step_id="user",
+                data_schema=_gate_schema(False, "left"),
+                errors={"base": "no_matching_esphome_device"},
+            )
+
         if user_input is not None:
+            selected_id = user_input.pop("esphome_device", nodes[0]["device_id"])
+            selected = next((node for node in nodes if node["device_id"] == selected_id), None)
+            if selected is None:
+                return self.async_abort(reason="device_not_found")
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={
                     **user_input,
+                    "esphome_device_id": selected["device_id"],
+                    "esphome_node_id": selected["node_id"],
+                    "esphome_entities": selected["entities"],
+                    "esphome_device_name": selected["name"],
                     OPTION_NOTIFY_OPEN: False,
                     OPTION_NOTIFY_CLOSED: False,
                     OPTION_NOTIFY_TARGETS: [DEFAULT_NOTIFY_TARGET],
                 },
             )
 
+        schema = dict(_gate_schema(False, "left").schema)
+        if len(nodes) > 1:
+            schema[vol.Required("esphome_device")] = selector.SelectSelector(
+                selector.SelectSelectorConfig(
+                    options=[
+                        {"value": node["device_id"], "label": node["name"]}
+                        for node in nodes
+                    ],
+                    mode=selector.SelectSelectorMode.DROPDOWN,
+                )
+            )
         return self.async_show_form(
             step_id="user",
-            data_schema=_gate_schema(False, "left"),
+            data_schema=vol.Schema(schema),
         )
 
     @staticmethod
