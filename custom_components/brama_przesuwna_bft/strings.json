@@ -37,7 +37,8 @@
         "description": "Ustawienia integracji bramy.",
         "menu_options": {
           "gate": "Karta i działanie bramy",
-          "notifications": "Powiadomienia"
+          "notifications": "Powiadomienia",
+          "device": "Wykryj sterownik i przypisz encje"
         }
       },
       "gate": {
@@ -55,6 +56,23 @@
           "notify_when_open": "Powiadom, gdy brama się otworzy",
           "notify_when_closed": "Powiadom, gdy brama się zamknie",
           "notify_targets": "Telefony lub grupy, które mają otrzymywać powiadomienia"
+        }
+      },
+      "device": {
+        "title": "Wybór sterownika ESPHome",
+        "description": "Wybierz sterownik bramy. W kolejnym kroku sprawdzisz i poprawisz przypisanie encji.",
+        "data": {
+          "esphome_device": "Sterownik bramy"
+        }
+      },
+      "entities": {
+        "title": "Przypisanie encji bramy",
+        "description": "Sprawdź przypisania encji urządzenia {device}.",
+        "data": {
+          "status": "Stan bramy",
+          "position": "Pozycja bramy",
+          "main_button": "Sterowanie bramą",
+          "pedestrian_button": "Sterowanie furtką"
         }
       }
     },
