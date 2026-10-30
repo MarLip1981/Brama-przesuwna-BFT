@@ -25,9 +25,6 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     h2 { font-size:20px; margin:0; }
     .status { font-weight:600; text-align:right; }
     .scene { margin:12px 0; padding:12px; border-radius:12px; background:var(--ha-card-background,var(--card-background-color)); border:1px solid var(--divider-color); }
-    .track { height:12px; border-radius:8px; background:var(--disabled-color); overflow:hidden; margin-top:10px; }
-    .position { height:100%; background:var(--primary-color); transition:width .3s ease; }
-    .track.right .position { margin-left:auto; }
     .meta { color:var(--secondary-text-color); font-size:13px; margin-top:5px; }
     .actions { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
     .actions.single { grid-template-columns:1fr; }
@@ -72,7 +69,6 @@ class BramaPrzesuwnaBFTCard extends LitElement {
         </div>
         <div class="scene">
           <div>Pozycja bramy: <strong>${pos === null ? "brak danych" : `${pos}%`}</strong></div>
-          <div class="track ${direction === "right" ? "right" : "left"}"><div class="position" style="width:${pos ?? 0}%"></div></div>
           <div class="meta">Kierunek otwierania: ${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka). Pozycja szacowana na podstawie czasu ruchu.</div>
         </div>
         <div class="actions ${pedestrianEnabled ? "" : "single"}">
