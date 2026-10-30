@@ -102,11 +102,34 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
         this._hass.callWS({type:"config/device_registry/list"}),
         this._hass.callWS({type:"config/entity_registry/list"})
       ]);
-      const device = (devices||[]).find(d => String(d.manufacturer||"").toLowerCase()===PROJECT_MANUFACTURER.toLowerCase() &&
-        this._norm(d.model)===this._norm(PROJECT_MODEL));
-      if (!device) { this._deviceName="Nie znaleziono urządzenia MarLip1981.BramaPrzesuwnaBFT"; return; }
-      this._deviceName=device.name_by_user || device.name || "Brama przesuwna BFT";
-      const owned=(entities||[]).filter(e=>e.device_id===device.id && e.platform==="esphome");
+      // Do not depend on the user-defined ESPHome node/project name.
+      // First associate ESPHome config entries with device registry records,
+      // then rank candidates by BFT-specific metadata and their actual entities.
+      const esphomeEntries = (this._hass.connection?.options?.config?.components || []).includes("esphome")
+        ? null : null; // Registry metadata below is authoritative; no project name is assumed.
+      const entityRows = entities || [];
+      const candidates = (devices || []).map(d => {
+        const owned = entityRows.filter(e => e.device_id === d.id ||
+          (e.config_entry_id && (d.config_entries || []).includes(e.config_entry_id)));
+        const meta = this._norm([d.manufacturer,d.model,d.name,d.name_by_user,
+          ...(d.identifiers || []).flat(), ...(d.connections || []).flat()].join(" "));
+        const entityText = this._norm(owned.map(e => [e.entity_id,e.original_name,e.name].join(" ")).join(" "));
+        let score = 0;
+        if (/brama|gate|bft|deimos/.test(meta)) score += 5;
+        if (/mar lip|marlip1981|brama przesuwna bft/.test(meta)) score += 8;
+        if (/dokladny stan bramy|pozycja bramy/.test(entityText)) score += 8;
+        if (/otworz zamknij brame|otworz jako furtke/.test(entityText)) score += 5;
+        if (owned.some(e => e.platform === "esphome")) score += 2;
+        return { device:d, owned, score };
+      }).filter(c => c.score >= 8).sort((a,b) => b.score-a.score);
+      const candidate = candidates[0];
+      if (!candidate) {
+        this._deviceName = "Nie wykryto sterownika BFT. Sprawdź, czy urządzenie ESPHome jest dodane do Home Assistant.";
+        return;
+      }
+      const device = candidate.device;
+      this._deviceName = device.name_by_user || device.name || "Sterownik bramy BFT";
+      const owned = candidate.owned;
       for (const [role, rule] of Object.entries(ROLES)) {
         if (this._config.radio[role]) continue;
         const match=owned.find(e => rule.domains.includes(e.entity_id.split(".")[0]) &&
