@@ -26,7 +26,8 @@
       "device_not_found": "Wybrane urządzenie ESPHome nie jest już dostępne."
     },
     "error": {
-      "required_entities": "Wskaż encje stanu, pozycji i sterowania bramą."
+      "required_entities": "Wskaż encje stanu, pozycji i sterowania bramą.",
+      "device_not_found": "Wybrane urządzenie ESPHome nie jest już dostępne."
     }
   },
   "options": {
@@ -56,6 +57,9 @@
           "notify_targets": "Telefony lub grupy, które mają otrzymywać powiadomienia"
         }
       }
+    },
+    "error": {
+      "no_matching_esphome_device": "Nie znaleziono sterownika ESPHome BFT. Sprawdź połączenie sterownika i spróbuj ponownie."
     }
   }
 }
