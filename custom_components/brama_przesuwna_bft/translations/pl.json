@@ -12,7 +12,11 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Integracja jest już skonfigurowana."
+      "single_instance_allowed": "Integracja jest już skonfigurowana.",
+      "device_not_found": "Wybrane urządzenie ESPHome nie jest już dostępne."
+    },
+    "error": {
+      "no_matching_esphome_device": "Nie znaleziono urządzenia ESPHome z firmware bramy. Dodaj płytkę „Brama wjazdowa” przez integrację ESPHome i spróbuj ponownie."
     }
   },
   "options": {
