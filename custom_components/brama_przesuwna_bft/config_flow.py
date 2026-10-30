@@ -55,23 +55,11 @@ def _entity_field(node, role, default=None):
 
 
 def _entities_schema(node, defaults):
-    """Build entity selectors and the opening-direction selector."""
+    """Build selectors for the ESPHome entities only."""
     schema = {}
     for role in ROLE_DOMAINS:
         key, field = _entity_field(node, role, defaults.get(role))
         schema[key] = field
-    schema[vol.Required(
-        OPTION_OPENING_DIRECTION,
-        default=defaults.get(OPTION_OPENING_DIRECTION, "right"),
-    )] = selector.SelectSelector(
-        selector.SelectSelectorConfig(
-            options=[
-                {"value": "left", "label": "W lewo"},
-                {"value": "right", "label": "W prawo"},
-            ],
-            mode=selector.SelectSelectorMode.DROPDOWN,
-        )
-    )
     return vol.Schema(schema)
 
 
@@ -168,7 +156,7 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return self.async_show_form(
                 step_id="entities",
                 data_schema=_entities_schema(
-                    node, {**node.get("entities", {}), OPTION_OPENING_DIRECTION: "right"}
+                    node, node.get("entities", {})
                 ),
                 description_placeholders={"device": node["name"]},
             )
