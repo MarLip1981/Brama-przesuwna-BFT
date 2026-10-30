@@ -41,7 +41,11 @@ class BramaPrzesuwnaBFTCard extends LitElement {
       main_button: config.main_button || "", pedestrian_button: config.pedestrian_button || "" };
   }
   getCardSize() { return 3; }
-  _entity(role) { return this._config?.radio?.[role] || this._config?.[({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button"})[role]] || DEFAULTS[role]; }
+  _entity(role) {
+    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button"})[role];
+    const configured = this.hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role];
+    return this._config?.radio?.[role] || this._config?.[legacyKey] || configured || "";
+  }
   _state(id) { return this.hass?.states?.[id]?.state; }
   _press(id) { if (id && this.hass) this.hass.callService("button", "press", { entity_id: id }); }
   _moreInfo(id) { if (id) this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: id }, bubbles: true, composed: true })); }
