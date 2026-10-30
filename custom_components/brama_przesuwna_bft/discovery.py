@@ -31,7 +31,11 @@ def discover_esphome_gate_nodes(hass):
     results = []
 
     for device in device_registry.devices:
-        config_entry = hass.config_entries.async_get_entry(device.config_entry_id) if device.config_entry_id else None
+        config_entry = (
+            hass.config_entries.async_get_entry(device.config_entry_id)
+            if device.config_entry_id
+            else None
+        )
         if config_entry is None or config_entry.domain != "esphome":
             continue
 
@@ -84,7 +88,7 @@ def discover_esphome_gate_nodes(hass):
 
         results.append({
             "device_id": device.id,
-            "node_id": esphome_entries[0].unique_id or mac_connections[0],
+            "node_id": config_entry.unique_id or mac_connections[0],
             "name": device.name_by_user or device.name or f"Brama BFT ({mac_connections[0]})",
             "entities": mapped,
             "manufacturer": manufacturer,
