@@ -4,7 +4,7 @@
     "step": {
       "user": {
         "title": "Ustawienia bramy",
-        "description": "Skonfiguruj działanie bramy oraz powiadomienia. Poszczególne opcje znajdziesz w odpowiednich sekcjach.",
+        "description": "Ustaw kierunek otwierania bramy i dostępność przycisku furtki. Encje sterownika zostaną wykryte w edytorze karty.",
         "data": {
           "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
           "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
@@ -12,29 +12,17 @@
       }
     },
     "abort": {
-      "single_instance_allowed": "Integracja jest już skonfigurowana.",
-      "device_not_found": "Wybrane urządzenie ESPHome nie jest już dostępne."
-    },
-    "error": {
-      "no_matching_esphome_device": "Nie znaleziono urządzenia ESPHome ze znacznikiem projektu BFT. Dodaj metadane projektu do firmware i uruchom ponownie sterownik."
+      "single_instance_allowed": "Integracja jest już skonfigurowana."
     }
   },
   "options": {
     "step": {
       "init": {
         "title": "Ustawienia bramy",
-        "description": "Skonfiguruj działanie bramy oraz powiadomienia. Poszczególne opcje znajdziesz w odpowiednich sekcjach.",
+        "description": "Ustawienia integracji bramy.",
         "menu_options": {
-          "device": "Wykryj urządzenie ESPHome",
           "gate": "Karta i działanie bramy",
           "notifications": "Powiadomienia"
-        }
-      },
-      "device": {
-        "title": "Wykryj urządzenie ESPHome",
-        "description": "Wybierz sterownik ESPHome rozpoznany po znaczniku projektu w firmware. W następnym kroku możesz poprawić przypisane encje.",
-        "data": {
-          "esphome_device": "Sterownik bramy"
         }
       },
       "gate": {
@@ -52,16 +40,6 @@
           "notify_when_open": "Powiadom, gdy brama się otworzy",
           "notify_when_closed": "Powiadom, gdy brama się zamknie",
           "notify_targets": "Telefony lub grupy, które mają otrzymywać powiadomienia"
-        }
-      },
-      "entities": {
-        "title": "Korekta encji urządzenia",
-        "description": "Sprawdź encje automatycznie wykryte dla sterownika. Możesz ręcznie poprawić każde przypisanie.",
-        "data": {
-          "status": "Stan bramy",
-          "position": "Pozycja bramy",
-          "main_button": "Sterowanie bramą",
-          "pedestrian_button": "Sterowanie furtką"
         }
       }
     }
