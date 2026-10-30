@@ -30,13 +30,9 @@ def discover_esphome_gate_nodes(hass):
     entity_registry = er.async_get(hass)
     results = []
 
-    for device in device_registry.devices.values():
-        esphome_entries = [
-            entry for entry_id in device.config_entries
-            if (entry := hass.config_entries.async_get_entry(entry_id)) is not None
-            and entry.domain == "esphome"
-        ]
-        if not esphome_entries:
+    for device in device_registry.devices:
+        config_entry = hass.config_entries.async_get_entry(device.config_entry_id) if device.config_entry_id else None
+        if config_entry is None or config_entry.domain != "esphome":
             continue
 
         mac_connections = [
@@ -57,7 +53,7 @@ def discover_esphome_gate_nodes(hass):
         # ESPHome entities can be associated with a child/secondary device
         # record. Include all entities owned by this ESPHome config entry,
         # while retaining device_id as a fallback for older HA registry data.
-        esphome_entry_ids = {entry.entry_id for entry in esphome_entries}
+        esphome_entry_ids = {config_entry.entry_id}
         device_entities = [
             entity for entity in entity_registry.entities.values()
             if entity.platform == "esphome"
