@@ -33,13 +33,25 @@ def discover_esphome_gate_nodes(hass):
             for pair in device.identifiers
             if isinstance(pair, (tuple, list)) and len(pair) == 2
         }
-        esphome_ids = [value for domain, value in identifiers if domain == "esphome"]
+        # The main ESPHome device is registered by its network-MAC connection,
+        # not by an ("esphome", ...) identifier. That identifier is used for
+        # ESPHome sub-devices. Identify the main physical node through the
+        # ESPHome config entry attached to the device registry record.
         esphome_entries = [
-            entry_id for entry_id in device.config_entries
+            entry for entry_id in device.config_entries
             if (entry := hass.config_entries.async_get_entry(entry_id)) is not None
             and entry.domain == "esphome"
         ]
-        if not esphome_ids or not esphome_entries:
+        if not esphome_entries:
+            continue
+
+        # Only accept the main ESPHome device, which has a network-MAC
+        # connection. Sub-devices may inherit project manufacturer/model.
+        mac_connections = [
+            str(value) for connection_type, value in device.connections
+            if connection_type == dr.CONNECTION_NETWORK_MAC
+        ]
+        if not mac_connections:
             continue
 
         # Home Assistant splits ESPHome project_name at the first dot:
@@ -71,7 +83,7 @@ def discover_esphome_gate_nodes(hass):
 
         results.append({
             "device_id": device.id,
-            "node_id": esphome_ids[0],
+            "node_id": esphome_entries[0].unique_id or mac_connections[0],
             "name": device.name_by_user or device.name or esphome_ids[0],
             "entities": mapped,
             "manufacturer": manufacturer,
