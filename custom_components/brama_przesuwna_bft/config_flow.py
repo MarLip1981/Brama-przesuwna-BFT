@@ -1,13 +1,15 @@
-"""Config flow and options for Brama przesuwna BFT."""
+"""Config flow and options for Brama przesuwna BFT.
 
+Entity discovery belongs to the Lovelace card editor, following the
+AtlasCube pattern. The integration flow only stores integration-level
+preferences such as gate direction and notification settings.
+"""
 from __future__ import annotations
 
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.helpers import selector
-
-from .discovery import discover_esphome_gate_nodes
 
 from .const import (
     DEFAULT_NAME,
@@ -25,12 +27,8 @@ def _gate_schema(pedestrian_default: bool, direction_default: str):
     """Build the gate-card settings form."""
     return vol.Schema(
         {
-            vol.Required(
-                OPTION_PEDESTRIAN_MODE, default=pedestrian_default
-            ): selector.BooleanSelector(),
-            vol.Required(
-                OPTION_OPENING_DIRECTION, default=direction_default
-            ): selector.SelectSelector(
+            vol.Required(OPTION_PEDESTRIAN_MODE, default=pedestrian_default): selector.BooleanSelector(),
+            vol.Required(OPTION_OPENING_DIRECTION, default=direction_default): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
                         {"value": "left", "label": "W lewo"},
@@ -48,10 +46,7 @@ def _notification_schema(hass, entry):
     services = hass.services.async_services().get("notify", {})
     targets = {DEFAULT_NOTIFY_TARGET}
     targets.update(services)
-    options = [
-        {"value": service, "label": f"notify.{service}"}
-        for service in sorted(targets)
-    ]
+    options = [{"value": service, "label": f"notify.{service}"} for service in sorted(targets)]
     selected = entry.options.get(
         OPTION_NOTIFY_TARGETS,
         entry.data.get(OPTION_NOTIFY_TARGETS, [DEFAULT_NOTIFY_TARGET]),
@@ -60,15 +55,11 @@ def _notification_schema(hass, entry):
         {
             vol.Required(
                 OPTION_NOTIFY_OPEN,
-                default=entry.options.get(
-                    OPTION_NOTIFY_OPEN, entry.data.get(OPTION_NOTIFY_OPEN, False)
-                ),
+                default=entry.options.get(OPTION_NOTIFY_OPEN, entry.data.get(OPTION_NOTIFY_OPEN, False)),
             ): selector.BooleanSelector(),
             vol.Required(
                 OPTION_NOTIFY_CLOSED,
-                default=entry.options.get(
-                    OPTION_NOTIFY_CLOSED, entry.data.get(OPTION_NOTIFY_CLOSED, False)
-                ),
+                default=entry.options.get(OPTION_NOTIFY_CLOSED, entry.data.get(OPTION_NOTIFY_CLOSED, False)),
             ): selector.BooleanSelector(),
             vol.Required(OPTION_NOTIFY_TARGETS, default=selected): selector.SelectSelector(
                 selector.SelectSelectorConfig(
@@ -82,55 +73,28 @@ def _notification_schema(hass, entry):
 
 
 class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
-    """Set up the BFT gate integration."""
+    """Set up the BFT gate integration without duplicating card entity mapping."""
 
     VERSION = 1
 
     async def async_step_user(self, user_input=None):
-        """Ask for the card options during initial setup."""
+        """Create the integration entry; entity discovery is done by the card editor."""
         if self._async_current_entries():
             return self.async_abort(reason="single_instance_allowed")
-
-        nodes = discover_esphome_gate_nodes(self.hass)
-        if not nodes:
-            return self.async_show_form(
-                step_id="user",
-                data_schema=_gate_schema(False, "left"),
-                errors={"base": "no_matching_esphome_device"},
-            )
-
         if user_input is not None:
-            selected_id = user_input.pop("esphome_device", nodes[0]["device_id"])
-            selected = next((node for node in nodes if node["device_id"] == selected_id), None)
-            if selected is None:
-                return self.async_abort(reason="device_not_found")
             return self.async_create_entry(
                 title=DEFAULT_NAME,
                 data={
-                    **user_input,
-                    "esphome_device_id": selected["device_id"],
-                    "esphome_node_id": selected["node_id"],
-                    "esphome_entities": selected["entities"],
-                    "esphome_device_name": selected["name"],
+                    OPTION_PEDESTRIAN_MODE: user_input[OPTION_PEDESTRIAN_MODE],
+                    OPTION_OPENING_DIRECTION: user_input[OPTION_OPENING_DIRECTION],
                     OPTION_NOTIFY_OPEN: False,
                     OPTION_NOTIFY_CLOSED: False,
                     OPTION_NOTIFY_TARGETS: [DEFAULT_NOTIFY_TARGET],
                 },
             )
-
-        schema = dict(_gate_schema(False, "left").schema)
-        schema[vol.Required("esphome_device", default=nodes[0]["device_id"])] = selector.SelectSelector(
-            selector.SelectSelectorConfig(
-                options=[
-                    {"value": node["device_id"], "label": node["name"]}
-                    for node in nodes
-                ],
-                mode=selector.SelectSelectorMode.DROPDOWN,
-            )
-        )
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(schema),
+            data_schema=_gate_schema(False, "right"),
         )
 
     @staticmethod
@@ -140,106 +104,18 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
-    """Manage gate-card settings and notifications in separate sections."""
+    """Manage integration-level preferences; card entities stay in Lovelace."""
 
     async def async_step_init(self, user_input=None):
-        """Show separate settings sections."""
+        """Show the available integration settings."""
         return self.async_show_menu(
             step_id="init",
-            menu_options=["device", "gate", "notifications"],
-        )
-
-    async def async_step_device(self, user_input=None):
-        """Select the physical BFT controller before configuring its entities."""
-        nodes = discover_esphome_gate_nodes(self.hass)
-        if not nodes:
-            return self.async_show_form(
-                step_id="device",
-                data_schema=vol.Schema({}),
-                errors={"base": "no_matching_esphome_device"},
-            )
-        current_id = self.config_entry.options.get(
-            "esphome_device_id", self.config_entry.data.get("esphome_device_id", nodes[0]["device_id"])
-        )
-        if user_input is not None:
-            current_id = user_input.get("esphome_device", current_id)
-        selected = next((node for node in nodes if node["device_id"] == current_id), None)
-        if selected is None:
-            return self.async_abort(reason="device_not_found")
-        self._selected_bft_node = selected
-        if user_input is not None:
-            return await self.async_step_entities()
-
-        schema = {
-            vol.Required("esphome_device", default=selected["device_id"]): selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[{"value": node["device_id"], "label": node["name"]} for node in nodes],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
-            )
-        }
-        return self.async_show_form(step_id="device", data_schema=vol.Schema(schema))
-
-    async def async_step_entities(self, user_input=None):
-        """Automatically suggest and allow manual correction of each BFT entity."""
-        node = getattr(self, "_selected_bft_node", None)
-        if node is None:
-            nodes = discover_esphome_gate_nodes(self.hass)
-            current_id = self.config_entry.options.get(
-                "esphome_device_id", self.config_entry.data.get("esphome_device_id")
-            )
-            node = next((item for item in nodes if item["device_id"] == current_id), None)
-        if node is None:
-            return self.async_abort(reason="device_not_found")
-
-        if user_input is not None:
-            mapped = {
-                role: user_input.get(role) or node["entities"].get(role, "")
-                for role in ("status", "position", "main_button", "pedestrian_button")
-            }
-            values = {
-                "esphome_device_id": node["device_id"],
-                "esphome_node_id": node["node_id"],
-                "esphome_device_name": node["name"],
-                "esphome_entities": {key: value for key, value in mapped.items() if value},
-            }
-            return self.async_create_entry(
-                title="", data={**self.config_entry.options, **values}
-            )
-
-        saved = self.config_entry.options.get(
-            "esphome_entities", self.config_entry.data.get("esphome_entities", {})
-        )
-        labels = {
-            "status": "Stan bramy",
-            "position": "Pozycja bramy",
-            "main_button": "Sterowanie bramą",
-            "pedestrian_button": "Sterowanie furtką",
-        }
-        domains = {
-            "status": ["sensor", "text_sensor"],
-            "position": ["sensor"],
-            "main_button": ["button"],
-            "pedestrian_button": ["button"],
-        }
-        schema = {}
-        for role, label in labels.items():
-            default = saved.get(role, node["entities"].get(role))
-            key = vol.Optional(role, default=default) if default else vol.Optional(role)
-            schema[key] = selector.EntitySelector(
-                selector.EntitySelectorConfig(filter=[{"device": node["device_id"], "domain": domains[role]}])
-            )
-        return self.async_show_form(
-            step_id="entities",
-            data_schema=vol.Schema(schema),
-            description_placeholders={"device": node["name"]},
+            menu_options=["gate", "notifications"],
         )
 
     async def async_step_gate(self, user_input=None):
-        """Configure the gate card without overwriting notification options."""
+        """Configure gate direction and optional pedestrian button."""
         if user_input is not None:
-            # Each options step writes the entire options dictionary. Preserve
-            # values saved by the other section instead of silently resetting them.
             return self.async_create_entry(
                 title="",
                 data={**self.config_entry.options, **user_input},
@@ -250,7 +126,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         )
         direction = self.config_entry.options.get(
             OPTION_OPENING_DIRECTION,
-            self.config_entry.data.get(OPTION_OPENING_DIRECTION, "left"),
+            self.config_entry.data.get(OPTION_OPENING_DIRECTION, "right"),
         )
         return self.async_show_form(
             step_id="gate",
