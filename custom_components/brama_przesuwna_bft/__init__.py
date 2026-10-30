@@ -44,6 +44,13 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
     if new_state is None:
         return
 
+    configured_entities = entry.options.get(
+        "esphome_entities", entry.data.get("esphome_entities", {})
+    )
+    status_entity = configured_entities.get("status", GATE_STATUS_ENTITY)
+    if event.data.get("entity_id") != status_entity:
+        return
+
     state = new_state.state
     if state == "Otwarta":
         enabled = entry.options.get(
@@ -62,7 +69,7 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
         return
 
     await asyncio.sleep(2)
-    current_state = hass.states.get(GATE_STATUS_ENTITY)
+    current_state = hass.states.get(status_entity)
     if current_state is None or current_state.state != state:
         return
 
@@ -99,7 +106,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     entry.async_on_unload(
         async_track_state_change_event(
             hass,
-            [GATE_STATUS_ENTITY],
+            [entry.options.get("esphome_entities", entry.data.get("esphome_entities", {})).get("status", GATE_STATUS_ENTITY)],
             lambda event: hass.async_create_task(
                 _async_gate_state_changed(hass, entry, event)
             ),
