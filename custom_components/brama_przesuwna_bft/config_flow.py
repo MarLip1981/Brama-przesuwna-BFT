@@ -210,7 +210,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             "esphome_entities", self.config_entry.data.get("esphome_entities", {})
         )
         for role, label in labels.items():
-            schema[vol.Optional(role)] = selector.EntitySelector(
+            schema[vol.Optional(role, default=saved.get(role, selected["entities"].get(role)))] = selector.EntitySelector(
                 selector.EntitySelectorConfig(
                     device_id=selected["device_id"],
                     domain=domains[role],
