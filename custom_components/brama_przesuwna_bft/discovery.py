@@ -82,12 +82,25 @@ def discover_esphome_gate_nodes(hass):
                     )
                     mapped[role] = selected.entity_id
 
+            available_entities = [
+                {
+                    "entity_id": entity.entity_id,
+                    "domain": entity.entity_id.split(".", 1)[0],
+                    "label": entity.name or entity.original_name or entity.entity_id,
+                }
+                for entity in device_entities
+            ]
+            available_entities.sort(
+                key=lambda item: (item["domain"], item["label"].casefold(), item["entity_id"])
+            )
+
             seen_devices.add(device.id)
             results.append({
                 "device_id": device.id,
                 "node_id": config_entry.unique_id or mac_connections[0],
                 "name": device.name_by_user or device.name or f"Brama BFT ({mac_connections[0]})",
                 "entities": mapped,
+                "available_entities": available_entities,
                 "manufacturer": manufacturer,
                 "model": model,
             })
