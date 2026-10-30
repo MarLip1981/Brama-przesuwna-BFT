@@ -198,14 +198,11 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     def async_get_options_flow(config_entry):
-        return BramaPrzesuwnaBFTOptionsFlow(config_entry)
+        return BramaPrzesuwnaBFTOptionsFlow()
 
 
 class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
     """Configure mapped entities, card behavior and notifications."""
-
-    def __init__(self, config_entry):
-        self.config_entry = config_entry
 
     async def async_step_init(self, user_input=None):
         return self.async_show_menu(
