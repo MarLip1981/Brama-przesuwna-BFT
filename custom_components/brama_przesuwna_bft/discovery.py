@@ -1,4 +1,4 @@
-"""Discover BFT ESPHome controllers and their registered entities."""
+"""Discover the BFT ESPHome controller by its project identity."""
 from __future__ import annotations
 
 import re
@@ -18,72 +18,78 @@ ROLE_HINTS = {
 
 
 def _norm(value: str) -> str:
+    """Normalize case, Polish diacritics, and separators for role matching."""
     value = unicodedata.normalize("NFKD", str(value or "").casefold())
     value = "".join(c for c in value if not unicodedata.combining(c))
     return re.sub(r"[^a-z0-9]+", " ", value).strip()
 
 
 def discover_esphome_gate_nodes(hass):
-    """Find BFT nodes through ESPHome config entries, not deprecated registry maps."""
-    devices = dr.async_get(hass)
-    entities = er.async_get(hass)
+    """Find BFT ESPHome config entries and collect their registered devices/entities."""
+    device_registry = dr.async_get(hass)
+    entity_registry = er.async_get(hass)
     results = []
+    seen_devices = set()
 
+    # Enumerate ESPHome config entries first. The registry's .devices mapping
+    # is deprecated and iterating it does not provide DeviceEntry objects.
     for config_entry in hass.config_entries.async_entries("esphome"):
-        for device in dr.async_entries_for_config_entry(devices, config_entry.entry_id):
+        devices = dr.async_entries_for_config_entry(
+            device_registry, config_entry.entry_id
+        )
+        for device in devices:
+            if device.id in seen_devices:
+                continue
             manufacturer = str(device.manufacturer or "").strip()
             model = str(device.model or "").strip()
-            if manufacturer.casefold() != PROJECT_MANUFACTURER.casefold():
-                continue
-            if model.casefold() != PROJECT_MODEL.casefold():
+            if (
+                manufacturer.casefold() != PROJECT_MANUFACTURER.casefold()
+                or model.casefold() != PROJECT_MODEL.casefold()
+            ):
                 continue
 
-            macs = [
-                str(value) for kind, value in device.connections
-                if kind == dr.CONNECTION_NETWORK_MAC
+            mac_connections = [
+                str(value)
+                for connection_type, value in device.connections
+                if connection_type == dr.CONNECTION_NETWORK_MAC
             ]
-            if not macs:
+            if not mac_connections:
                 continue
 
-            related_devices = dr.async_entries_for_config_entry(devices, config_entry.entry_id)
-            related_ids = {item.id for item in related_devices}
-            registered = [
-                item for item in entities.entities.values()
-                if item.platform == "esphome"
+            device_entities = [
+                entity for entity in entity_registry.entities.values()
+                if entity.platform == "esphome"
                 and (
-                    item.config_entry_id == config_entry.entry_id
-                    or item.device_id in related_ids
+                    entity.device_id == device.id
+                    or entity.config_entry_id == config_entry.entry_id
                 )
             ]
 
-            available = []
             mapped = {}
-            for entity in registered:
-                domain = entity.domain
-                label = entity.name or entity.original_name or entity.entity_id
-                available.append({
-                    "entity_id": entity.entity_id,
-                    "domain": domain,
-                    "label": f"{label} ({entity.entity_id})",
-                })
             for role, hints in ROLE_HINTS.items():
                 normalized_hints = tuple(_norm(hint) for hint in hints)
-                candidates = [
-                    item for item in registered
-                    if any(hint in _norm(" ".join(str(value or "") for value in (
-                        item.entity_id, item.original_name, item.name
-                    ))) for hint in normalized_hints)
-                ]
+                candidates = []
+                for entity in device_entities:
+                    searchable = _norm(" ".join(str(value or "") for value in (
+                        entity.entity_id, entity.original_name, entity.name
+                    )))
+                    if any(hint in searchable for hint in normalized_hints):
+                        candidates.append(entity)
                 if candidates:
-                    mapped[role] = candidates[0].entity_id
+                    selected = next(
+                        (item for item in candidates if item.device_id == device.id),
+                        candidates[0],
+                    )
+                    mapped[role] = selected.entity_id
 
+            seen_devices.add(device.id)
             results.append({
                 "device_id": device.id,
-                "node_id": config_entry.unique_id or macs[0],
-                "name": device.name_by_user or device.name or f"Brama BFT ({macs[0]})",
+                "node_id": config_entry.unique_id or mac_connections[0],
+                "name": device.name_by_user or device.name or f"Brama BFT ({mac_connections[0]})",
                 "entities": mapped,
-                "available_entities": available,
                 "manufacturer": manufacturer,
                 "model": model,
             })
+
     return results
