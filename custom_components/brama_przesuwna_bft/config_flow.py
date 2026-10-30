@@ -119,16 +119,15 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             )
 
         schema = dict(_gate_schema(False, "left").schema)
-        if len(nodes) > 1:
-            schema[vol.Required("esphome_device")] = selector.SelectSelector(
-                selector.SelectSelectorConfig(
-                    options=[
-                        {"value": node["device_id"], "label": node["name"]}
-                        for node in nodes
-                    ],
-                    mode=selector.SelectSelectorMode.DROPDOWN,
-                )
+        schema[vol.Required("esphome_device", default=nodes[0]["device_id"])] = selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    {"value": node["device_id"], "label": node["name"]}
+                    for node in nodes
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
             )
+        )
         return self.async_show_form(
             step_id="user",
             data_schema=vol.Schema(schema),
@@ -176,9 +175,8 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
                 data={**self.config_entry.options, **values},
             )
 
-        schema = {}
-        if len(nodes) > 1:
-            schema[vol.Required("esphome_device")] = selector.SelectSelector(
+        schema = {
+            vol.Required("esphome_device", default=nodes[0]["device_id"]): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
                         {"value": node["device_id"], "label": node["name"]}
@@ -187,6 +185,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             )
+        }
         return self.async_show_form(
             step_id="device",
             data_schema=vol.Schema(schema),
