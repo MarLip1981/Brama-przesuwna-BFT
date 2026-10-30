@@ -45,7 +45,13 @@ class PedestrianModeSensor(BinarySensorEntity):
         """Expose the configured opening direction to the card."""
         return {
             "opening_direction": self._option(OPTION_OPENING_DIRECTION, "left"),
-            "esphome_device": self._entry.data.get("esphome_device_name"),
-            "esphome_node_id": self._entry.data.get("esphome_node_id"),
-            "entities": self._entry.data.get("esphome_entities", {}),
+            "esphome_device": self._entry.options.get(
+                "esphome_device_name", self._entry.data.get("esphome_device_name")
+            ),
+            "esphome_node_id": self._entry.options.get(
+                "esphome_node_id", self._entry.data.get("esphome_node_id")
+            ),
+            "entities": self._entry.options.get(
+                "esphome_entities", self._entry.data.get("esphome_entities", {})
+            ),
         }
