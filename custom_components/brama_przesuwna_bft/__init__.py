@@ -107,6 +107,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             [entry.options.get("esphome_entities", entry.data.get("esphome_entities", {})).get("status", GATE_STATUS_ENTITY)],
             partial(_async_gate_state_changed, hass, entry),
         )
+    )
     return True
 
 
