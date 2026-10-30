@@ -33,8 +33,15 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             _LOGGER.exception("Nie udało się udostępnić pliku karty BFT: %s", err)
             return
 
-    # Storage-mode Lovelace exposes a supported resource collection API. Adding
-    # the module there makes it available to the dashboard card picker.
+    # Register as an extra module too. This is a fallback for HA versions
+    # where Lovelace resources are not ready during integration setup.
+    try:
+        add_extra_js_url(hass, _CARD_MODULE_URL)
+        _LOGGER.info("Zarejestrowano moduł frontendowy karty BFT: %s", _CARD_MODULE_URL)
+    except Exception:  # noqa: BLE001
+        _LOGGER.exception("Nie udało się zarejestrować modułu frontendowego karty BFT.")
+
+    # Storage-mode Lovelace exposes a supported resource collection API.
     lovelace = hass.data.get(LOVELACE_DATA)
     if lovelace is not None and lovelace.resource_mode == MODE_STORAGE:
         try:
