@@ -2,8 +2,8 @@ import { LitElement, html, css } from "lit";
 
 const DEFAULT_POSITION = "sensor.wjazd_brama_wjazdowa_pozycja_bramy";
 const DEFAULT_STATUS = "sensor.brama_wjazdowa_dokladny_stan_bramy";
-const DEFAULT_MAIN = "button.brama_wjazdowa_otworz_zamknij_brame";
-const DEFAULT_PEDESTRIAN = "button.brama_wjazdowa_otworz_jako_furtke";
+const DEFAULT_MAIN = "button.wjazd_brama_wjazdowa_otworz_zamknij_brame";
+const DEFAULT_PEDESTRIAN = "button.wjazd_brama_wjazdowa_otworz_jako_furtke";
 const PEDESTRIAN_MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 
 class BramaPrzesuwnaBFTCard extends LitElement {
