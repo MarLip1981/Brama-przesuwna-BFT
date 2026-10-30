@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+from functools import partial
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
@@ -31,10 +32,7 @@ async def _async_frontend_after_start(hass: HomeAssistant, event: Event) -> None
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     """Register the dashboard card and retry after Home Assistant starts."""
     await async_setup_frontend(hass)
-    hass.bus.async_listen_once(
-        EVENT_HOMEASSISTANT_STARTED,
-        lambda event: hass.async_create_task(_async_frontend_after_start(hass, event)),
-    )
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_frontend_after_start)
     return True
 
 
@@ -107,11 +105,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         async_track_state_change_event(
             hass,
             [entry.options.get("esphome_entities", entry.data.get("esphome_entities", {})).get("status", GATE_STATUS_ENTITY)],
-            lambda event: hass.async_create_task(
-                _async_gate_state_changed(hass, entry, event)
-            ),
+            partial(_async_gate_state_changed, hass, entry),
         )
-    )
     return True
 
 
