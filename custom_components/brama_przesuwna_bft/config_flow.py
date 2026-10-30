@@ -150,7 +150,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         )
 
     async def async_step_device(self, user_input=None):
-        """Select the physical controller and correct its entity-role mapping."""
+        """Select the physical BFT controller before configuring its entities."""
         nodes = discover_esphome_gate_nodes(self.hass)
         if not nodes:
             return self.async_show_form(
@@ -158,42 +158,58 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
                 data_schema=vol.Schema({}),
                 errors={"base": "no_matching_esphome_device"},
             )
-
-        if user_input is not None:
-            selected_id = user_input.get("esphome_device", nodes[0]["device_id"])
-            selected = next((node for node in nodes if node["device_id"] == selected_id), None)
-            if selected is None:
-                return self.async_abort(reason="device_not_found")
-            manual_entities = {
-                role: user_input.get(role) or selected["entities"].get(role, "")
-                for role in ("status", "position", "main_button", "pedestrian_button")
-            }
-            values = {
-                "esphome_device_id": selected["device_id"],
-                "esphome_node_id": selected["node_id"],
-                "esphome_device_name": selected["name"],
-                "esphome_entities": {k: v for k, v in manual_entities.items() if v},
-            }
-            return self.async_create_entry(
-                title="",
-                data={**self.config_entry.options, **values},
-            )
-
         current_id = self.config_entry.options.get(
             "esphome_device_id", self.config_entry.data.get("esphome_device_id", nodes[0]["device_id"])
         )
-        selected = next((node for node in nodes if node["device_id"] == current_id), nodes[0])
+        if user_input is not None:
+            current_id = user_input.get("esphome_device", current_id)
+        selected = next((node for node in nodes if node["device_id"] == current_id), None)
+        if selected is None:
+            return self.async_abort(reason="device_not_found")
+        self._selected_bft_node = selected
+        if user_input is not None:
+            return await self.async_step_entities()
+
         schema = {
             vol.Required("esphome_device", default=selected["device_id"]): selector.SelectSelector(
                 selector.SelectSelectorConfig(
-                    options=[
-                        {"value": node["device_id"], "label": node["name"]}
-                        for node in nodes
-                    ],
+                    options=[{"value": node["device_id"], "label": node["name"]} for node in nodes],
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             )
         }
+        return self.async_show_form(step_id="device", data_schema=vol.Schema(schema))
+
+    async def async_step_entities(self, user_input=None):
+        """Automatically suggest and allow manual correction of each BFT entity."""
+        node = getattr(self, "_selected_bft_node", None)
+        if node is None:
+            nodes = discover_esphome_gate_nodes(self.hass)
+            current_id = self.config_entry.options.get(
+                "esphome_device_id", self.config_entry.data.get("esphome_device_id")
+            )
+            node = next((item for item in nodes if item["device_id"] == current_id), None)
+        if node is None:
+            return self.async_abort(reason="device_not_found")
+
+        if user_input is not None:
+            mapped = {
+                role: user_input.get(role) or node["entities"].get(role, "")
+                for role in ("status", "position", "main_button", "pedestrian_button")
+            }
+            values = {
+                "esphome_device_id": node["device_id"],
+                "esphome_node_id": node["node_id"],
+                "esphome_device_name": node["name"],
+                "esphome_entities": {key: value for key, value in mapped.items() if value},
+            }
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **values}
+            )
+
+        saved = self.config_entry.options.get(
+            "esphome_entities", self.config_entry.data.get("esphome_entities", {})
+        )
         labels = {
             "status": "Stan bramy",
             "position": "Pozycja bramy",
@@ -206,20 +222,17 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             "main_button": ["button"],
             "pedestrian_button": ["button"],
         }
-        saved = self.config_entry.options.get(
-            "esphome_entities", self.config_entry.data.get("esphome_entities", {})
-        )
+        schema = {}
         for role, label in labels.items():
-            schema[vol.Optional(role, default=saved.get(role, selected["entities"].get(role)))] = selector.EntitySelector(
-                selector.EntitySelectorConfig(
-                    device_id=selected["device_id"],
-                    domain=domains[role],
-                )
+            default = saved.get(role, node["entities"].get(role))
+            key = vol.Optional(role, default=default) if default else vol.Optional(role)
+            schema[key] = selector.EntitySelector(
+                selector.EntitySelectorConfig(device_id=node["device_id"], domain=domains[role])
             )
         return self.async_show_form(
-            step_id="device",
+            step_id="entities",
             data_schema=vol.Schema(schema),
-            description_placeholders={"device": selected["name"]},
+            description_placeholders={"device": node["name"]},
         )
 
     async def async_step_gate(self, user_input=None):
