@@ -227,7 +227,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             default = saved.get(role, node["entities"].get(role))
             key = vol.Optional(role, default=default) if default else vol.Optional(role)
             schema[key] = selector.EntitySelector(
-                selector.EntitySelectorConfig(device_id=node["device_id"], domain=domains[role])
+                selector.EntitySelectorConfig(filter=[{"device": node["device_id"], "domain": domains[role]}])
             )
         return self.async_show_form(
             step_id="entities",
