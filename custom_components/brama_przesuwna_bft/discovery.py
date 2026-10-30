@@ -5,6 +5,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers import entity_registry as er
 
 PROJECT_NAME = "MarLip1981.BramaPrzesuwnaBFT"
+PROJECT_MANUFACTURER, PROJECT_MODEL = PROJECT_NAME.split(".", 1)
 ROLE_HINTS = {
     "status": ("dokładny stan bramy",),
     "position": ("pozycja bramy",),
@@ -41,11 +42,16 @@ def discover_esphome_gate_nodes(hass):
         if not esphome_ids or not esphome_entries:
             continue
 
-        # ESPHome project metadata is exposed in HA device manufacturer/model.
-        # Manufacturer is the stable project name; never use friendly device/entity names
-        # as the identity of this integration.
+        # Home Assistant splits ESPHome project_name at the first dot:
+        # "MarLip1981.BramaPrzesuwnaBFT" becomes manufacturer="MarLip1981"
+        # and model="BramaPrzesuwnaBFT". Match both stable fields, never the
+        # friendly device/entity names.
         manufacturer = str(device.manufacturer or "").strip()
-        if manufacturer.casefold() != PROJECT_NAME.casefold():
+        model = str(device.model or "").strip()
+        if (
+            manufacturer.casefold() != PROJECT_MANUFACTURER.casefold()
+            or model.casefold() != PROJECT_MODEL.casefold()
+        ):
             continue
 
         mapped = {}
@@ -69,7 +75,7 @@ def discover_esphome_gate_nodes(hass):
             "name": device.name_by_user or device.name or esphome_ids[0],
             "entities": mapped,
             "manufacturer": manufacturer,
-            "model": device.model or "",
+            "model": model,
         })
 
     return results
