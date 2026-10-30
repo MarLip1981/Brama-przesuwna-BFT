@@ -16,6 +16,9 @@
 esphome:
   name: brama-wjazdowa
   friendly_name: Brama wjazdowa
+  project:
+    name: MarLip1981.BramaPrzesuwnaBFT
+    version: "1.0.0"
 
   on_boot:
     - priority: -100
