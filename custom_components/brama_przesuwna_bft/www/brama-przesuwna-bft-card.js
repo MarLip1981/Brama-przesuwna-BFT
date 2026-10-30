@@ -45,6 +45,9 @@ class BramaPrzesuwnaBFTCard extends LitElement {
   _state(id) { return this.hass?.states?.[id]?.state; }
   _press(id) { if (id && this.hass) this.hass.callService("button", "press", { entity_id: id }); }
   _moreInfo(id) { if (id) this.dispatchEvent(new CustomEvent("hass-more-info", { detail: { entityId: id }, bubbles: true, composed: true })); }
+  _headerDown() { this._holdFired = false; clearTimeout(this._holdTimer); this._holdTimer = setTimeout(() => { this._holdFired = true; this._moreInfo(this._entity("position")); }, 600); }
+  _headerUp() { clearTimeout(this._holdTimer); }
+  _headerClick() { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); }
   render() {
     if (!this._config || !this.hass) return html``;
     const mode = this.hass.states?.[MODE_ENTITY];
@@ -60,7 +63,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     const mainLabel = moving ? "Stop" : open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     return html`
       <ha-card>
-        <div class="head" @click=${() => this._moreInfo(statusId)} @contextmenu=${e => { e.preventDefault(); this._moreInfo(positionId); }}>
+        <div class="head" @pointerdown=${() => this._headerDown()} @pointerup=${() => this._headerUp()} @pointerleave=${() => this._headerUp()} @pointercancel=${() => this._headerUp()} @click=${() => this._headerClick()}>
           <h2>${this._config.name}</h2><div class="status">${status}${moving && pos !== null ? html` · ${pos}%` : ""}</div>
         </div>
         <div class="scene">
