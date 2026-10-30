@@ -1,5 +1,4 @@
-"""Automatic frontend registration for the BFT dashboard card."""
-
+"""Serve and register the BFT Lovelace card, following the AtlasCube resource pattern."""
 from __future__ import annotations
 
 import logging
@@ -7,7 +6,7 @@ from pathlib import Path
 
 from homeassistant.components.frontend import add_extra_js_url
 from homeassistant.components.http import StaticPathConfig
-from homeassistant.components.lovelace.const import LOVELACE_DATA, MODE_STORAGE
+from homeassistant.components.lovelace.const import LOVELACE_DATA
 from homeassistant.core import HomeAssistant
 
 _LOGGER = logging.getLogger(__name__)
@@ -18,7 +17,7 @@ _CARD_MODULE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
 async def async_setup_frontend(hass: HomeAssistant) -> None:
-    """Serve the card and register it as a Lovelace resource where possible."""
+    """Serve the card and register it in Lovelace automatically."""
     if not _CARD_PATH.is_file():
         _LOGGER.error("Brama przesuwna BFT: brakuje pliku karty: %s", _CARD_PATH)
         return
@@ -33,46 +32,42 @@ async def async_setup_frontend(hass: HomeAssistant) -> None:
             _LOGGER.exception("Nie udało się udostępnić pliku karty BFT: %s", err)
             return
 
-    # Register as an extra module too. This is a fallback for HA versions
-    # where Lovelace resources are not ready during integration setup.
-    try:
-        add_extra_js_url(hass, _CARD_MODULE_URL)
-        _LOGGER.info("Zarejestrowano moduł frontendowy karty BFT: %s", _CARD_MODULE_URL)
-    except Exception:  # noqa: BLE001
-        _LOGGER.exception("Nie udało się zarejestrować modułu frontendowego karty BFT.")
-
-    # Storage-mode Lovelace exposes a supported resource collection API.
     lovelace = hass.data.get(LOVELACE_DATA)
-    if lovelace is not None and lovelace.resource_mode == MODE_STORAGE:
-        try:
-            resources = lovelace.resources
-            await resources.async_get_info()
-            existing = next(
-                (
-                    item
-                    for item in resources.async_items()
-                    if item.get("url", "").split("?", 1)[0] == _CARD_URL
-                ),
-                None,
-            )
-            if existing is None:
-                await resources.async_create_item(
-                    {"res_type": "module", "url": _CARD_MODULE_URL}
-                )
-                _LOGGER.info("Dodano zasób Lovelace karty BFT: %s", _CARD_MODULE_URL)
-            elif existing.get("url") != _CARD_MODULE_URL:
-                await resources.async_update_item(
-                    existing["id"], {"res_type": "module", "url": _CARD_MODULE_URL}
-                )
-                _LOGGER.info("Zaktualizowano zasób Lovelace karty BFT: %s", _CARD_MODULE_URL)
-            return
-        except Exception:  # noqa: BLE001
-            _LOGGER.exception("Nie udało się dodać zasobu Lovelace karty BFT.")
+    if lovelace is None:
+        _LOGGER.debug("Lovelace nie jest jeszcze gotowe; rejestracja zasobu zostanie ponowiona po starcie HA.")
+        return
 
-    # YAML-managed resources cannot be modified by an integration. Use the
-    # frontend extra-module mechanism in that case.
-    try:
+    if getattr(lovelace, "resource_mode", "storage") == "yaml":
         add_extra_js_url(hass, _CARD_MODULE_URL)
-        _LOGGER.info("Zarejestrowano moduł frontendowy karty BFT: %s", _CARD_MODULE_URL)
-    except Exception:  # noqa: BLE001
-        _LOGGER.exception("Nie udało się zarejestrować modułu karty BFT.")
+        _LOGGER.info("Zarejestrowano kartę BFT jako dodatkowy moduł JS.")
+        return
+
+    resources = getattr(lovelace, "resources", None)
+    if resources is None:
+        _LOGGER.warning("Nie znaleziono rejestru zasobów Lovelace dla karty BFT.")
+        return
+
+    try:
+        if not getattr(resources, "loaded", True):
+            await resources.async_load()
+
+        existing = list(resources.async_items())
+        matching = [
+            item for item in existing
+            if str(item.get("url", "")).split("?", 1)[0] == _CARD_URL
+        ]
+        if matching:
+            primary = matching[0]
+            if primary.get("url") != _CARD_MODULE_URL or primary.get("res_type") != "module":
+                await resources.async_update_item(
+                    primary["id"], {"res_type": "module", "url": _CARD_MODULE_URL}
+                )
+            for duplicate in matching[1:]:
+                await resources.async_delete_item(duplicate["id"])
+            _LOGGER.info("Zasób karty BFT jest zarejestrowany: %s", _CARD_MODULE_URL)
+            return
+
+        await resources.async_create_item({"res_type": "module", "url": _CARD_MODULE_URL})
+        _LOGGER.info("Automatycznie dodano zasób karty BFT do Lovelace: %s", _CARD_MODULE_URL)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.exception("Nie udało się zarejestrować zasobu Lovelace karty BFT: %s", err)
