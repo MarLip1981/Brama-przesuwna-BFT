@@ -96,6 +96,7 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
   _fire() { this.dispatchEvent(new CustomEvent("config-changed",{detail:{config:this._config},bubbles:true,composed:true})); }
   _norm(v) { return String(v||"").normalize("NFKD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[^a-z0-9]+/g," ").trim(); }
   async _autoDetect() {
+    if (this._loading || !this._hass) return;
     this._loading=true; this.requestUpdate();
     try {
       const [devices, entities] = await Promise.all([
@@ -157,7 +158,10 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
         if (match) this._config.radio[role]=match.entity_id;
       }
       this._fire();
-    } catch(err) { console.warn("Brama BFT: nie udało się pobrać rejestrów HA",err); this._deviceName="Błąd odczytu rejestru urządzeń HA"; }
+    } catch(err) {
+      console.warn("Brama BFT: nie udało się pobrać rejestrów HA",err);
+      this._deviceName="Błąd odczytu rejestru urządzeń HA. Możesz ponowić wykrywanie.";
+    }
     finally { this._loading=false; this.requestUpdate(); }
   }
   _set(key,value) { this._config={...this._config,radio:{...this._config.radio,[key]:value}}; this._fire(); }
@@ -170,6 +174,7 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
     if (!this._config) return html``;
     return html`<div class="field"><label>Nazwa karty</label><input .value=${this._config.name||""} @change=${e=>{this._config={...this._config,name:e.target.value};this._fire();}}></div>
       <p class="hint">${this._loading?"Wykrywanie sterownika i encji…":this._deviceName}</p>
+      <div class="field"><button class="secondary" ?disabled=${this._loading} @click=${()=>this._autoDetect()}>Wykryj sterownik ponownie</button></div>
       ${Object.entries(ROLES).map(([role,meta])=>html`<div class="field"><label>${meta.label}</label>
         <select .value=${this._config.radio[role]||""} @change=${e=>this._set(role,e.target.value)}>
           <option value="">— wybierz encję —</option>
