@@ -150,7 +150,7 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
         )
 
     async def async_step_device(self, user_input=None):
-        """Discover or reselect the ESPHome gate controller."""
+        """Select the physical controller and correct its entity-role mapping."""
         nodes = discover_esphome_gate_nodes(self.hass)
         if not nodes:
             return self.async_show_form(
@@ -164,19 +164,27 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             selected = next((node for node in nodes if node["device_id"] == selected_id), None)
             if selected is None:
                 return self.async_abort(reason="device_not_found")
+            manual_entities = {
+                role: user_input.get(role) or selected["entities"].get(role, "")
+                for role in ("status", "position", "main_button", "pedestrian_button")
+            }
             values = {
                 "esphome_device_id": selected["device_id"],
                 "esphome_node_id": selected["node_id"],
                 "esphome_device_name": selected["name"],
-                "esphome_entities": selected["entities"],
+                "esphome_entities": {k: v for k, v in manual_entities.items() if v},
             }
             return self.async_create_entry(
                 title="",
                 data={**self.config_entry.options, **values},
             )
 
+        current_id = self.config_entry.options.get(
+            "esphome_device_id", self.config_entry.data.get("esphome_device_id", nodes[0]["device_id"])
+        )
+        selected = next((node for node in nodes if node["device_id"] == current_id), nodes[0])
         schema = {
-            vol.Required("esphome_device", default=nodes[0]["device_id"]): selector.SelectSelector(
+            vol.Required("esphome_device", default=selected["device_id"]): selector.SelectSelector(
                 selector.SelectSelectorConfig(
                     options=[
                         {"value": node["device_id"], "label": node["name"]}
@@ -186,10 +194,34 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
                 )
             )
         }
+        labels = {
+            "status": "Stan bramy",
+            "position": "Pozycja bramy",
+            "main_button": "Sterowanie bramą",
+            "pedestrian_button": "Sterowanie furtką",
+        }
+        domains = {
+            "status": ["sensor", "text_sensor"],
+            "position": ["sensor"],
+            "main_button": ["button"],
+            "pedestrian_button": ["button"],
+        }
+        saved = self.config_entry.options.get(
+            "esphome_entities", self.config_entry.data.get("esphome_entities", {})
+        )
+        for role, label in labels.items():
+            schema[vol.Optional(role)] = selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    device_id=selected["device_id"],
+                    domain=domains[role],
+                )
+            )
         return self.async_show_form(
             step_id="device",
             data_schema=vol.Schema(schema),
+            description_placeholders={"device": selected["name"]},
         )
+
     async def async_step_gate(self, user_input=None):
         """Configure the gate card without overwriting notification options."""
         if user_input is not None:
