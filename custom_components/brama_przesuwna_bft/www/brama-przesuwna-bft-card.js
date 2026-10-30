@@ -112,17 +112,39 @@ class BramaPrzesuwnaBFTCardEditor extends LitElement {
         const meta = this._norm([d.manufacturer,d.model,d.name,d.name_by_user,
           ...(d.identifiers || []).flat(), ...(d.connections || []).flat()].join(" "));
         const entityText = this._norm(owned.map(e => [e.entity_id,e.original_name,e.name].join(" ")).join(" "));
+        const hasStatus = /dokladny stan bramy/.test(entityText);
+        const hasPosition = /pozycja bramy/.test(entityText);
+        const hasMain = /otworz zamknij brame/.test(entityText);
+        const hasPedestrian = /otworz jako furtke/.test(entityText);
+        const isESPHome = owned.some(e => e.platform === "esphome");
+        const exactProject = /marlip1981|brama przesuwna bft/.test(meta);
+        const explicitBFT = /bft|deimos/.test(meta);
+        // A generic device name containing "brama" is not enough: require
+        // either explicit project/vendor identity or a strong ESPHome entity
+        // fingerprint. This prevents accidentally binding another ESP32.
+        const entityFingerprint = isESPHome && (
+          (hasStatus && hasPosition) || (hasMain && hasPedestrian) ||
+          (hasStatus && hasMain && hasPosition)
+        );
+        const eligible = exactProject || (explicitBFT && isESPHome) || entityFingerprint;
         let score = 0;
-        if (/brama|gate|bft|deimos/.test(meta)) score += 5;
-        if (/mar lip|marlip1981|brama przesuwna bft/.test(meta)) score += 8;
-        if (/dokladny stan bramy|pozycja bramy/.test(entityText)) score += 8;
-        if (/otworz zamknij brame|otworz jako furtke/.test(entityText)) score += 5;
-        if (owned.some(e => e.platform === "esphome")) score += 2;
-        return { device:d, owned, score };
-      }).filter(c => c.score >= 8).sort((a,b) => b.score-a.score);
+        if (exactProject) score += 100;
+        if (explicitBFT) score += 40;
+        if (entityFingerprint) score += 60;
+        if (hasStatus) score += 12;
+        if (hasPosition) score += 12;
+        if (hasMain) score += 8;
+        if (hasPedestrian) score += 8;
+        if (isESPHome) score += 5;
+        return { device:d, owned, score, eligible };
+      }).filter(c => c.eligible).sort((a,b) => b.score-a.score);
       const candidate = candidates[0];
       if (!candidate) {
-        this._deviceName = "Nie wykryto sterownika BFT. Sprawdź, czy urządzenie ESPHome jest dodane do Home Assistant.";
+        this._deviceName = "Nie wykryto sterownika BFT. Wymagane są dane projektu BFT lub charakterystyczny zestaw encji ESPHome.";
+        return;
+      }
+      if (candidates.length > 1 && candidates[0].score === candidates[1].score) {
+        this._deviceName = "Wykryto kilka możliwych sterowników BFT. Wybierz encje ręcznie.";
         return;
       }
       const device = candidate.device;
