@@ -60,7 +60,7 @@ class BramaPrzesuwnaBFTCard extends LitElement {
     const moving = /otwieranie|zamykanie/i.test(status), open = /otwarta/i.test(status), closed = /zamknięta/i.test(status);
     const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
     const direction = mode?.attributes?.opening_direction || "right";
-    const mainLabel = moving ? "Stop" : open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
+    const mainLabel = open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     return html`
       <ha-card>
         <div class="head" @pointerdown=${() => this._headerDown()} @pointerup=${() => this._headerUp()} @pointerleave=${() => this._headerUp()} @pointercancel=${() => this._headerUp()} @click=${() => this._headerClick()}>
