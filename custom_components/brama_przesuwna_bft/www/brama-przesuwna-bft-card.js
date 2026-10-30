@@ -30,10 +30,10 @@ class BramaPrzesuwnaBFTCard extends LitElement {
   setConfig(config) {
     this._config = {
       name: config.name || "Brama wjazdowa",
-      position_entity: config.position_entity || DEFAULT_POSITION,
-      status_entity: config.status_entity || DEFAULT_STATUS,
-      main_button: config.main_button || DEFAULT_MAIN,
-      pedestrian_button: config.pedestrian_button || DEFAULT_PEDESTRIAN,
+      position_entity: config.position_entity || null,
+      status_entity: config.status_entity || null,
+      main_button: config.main_button || null,
+      pedestrian_button: config.pedestrian_button || null,
     };
   }
 
@@ -45,16 +45,21 @@ class BramaPrzesuwnaBFTCard extends LitElement {
 
   render() {
     if (!this._config || !this.hass) return html``;
-    const raw = this._state(this._config.position_entity);
+    const modeEntity = this.hass.states?.[PEDESTRIAN_MODE_ENTITY];
+    const discovered = modeEntity?.attributes?.entities || {};
+    const positionEntity = this._config.position_entity || discovered.position || DEFAULT_POSITION;
+    const statusEntity = this._config.status_entity || discovered.status || DEFAULT_STATUS;
+    const mainButton = this._config.main_button || discovered.main_button || DEFAULT_MAIN;
+    const pedestrianButton = this._config.pedestrian_button || discovered.pedestrian_button || DEFAULT_PEDESTRIAN;
+    const raw = this._state(positionEntity);
     const n = Number(raw);
     const valid = raw !== undefined && !["unknown", "unavailable"].includes(raw) && Number.isFinite(n);
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : null;
-    const status = this._state(this._config.status_entity) || "Brak stanu";
+    const status = this._state(statusEntity) || "Brak stanu";
     const moving = /otwieranie|zamykanie/i.test(status);
     const open = /otwarta/i.test(status);
     const closed = /zamknięta/i.test(status);
-    const modeEntity = this.hass.states?.[PEDESTRIAN_MODE_ENTITY];
-    const pedestrianEnabled = modeEntity?.state === "on";
+    const pedestrianEnabled = modeEntity?.state === "on" && Boolean(pedestrianButton);
     const direction = modeEntity?.attributes?.opening_direction || "left";
     const mainLabel = moving ? "Stop" : open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     return html`
@@ -66,8 +71,8 @@ class BramaPrzesuwnaBFTCard extends LitElement {
           <div class="meta">Kierunek otwierania: ${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka). Pozycja szacowana na podstawie czasu ruchu.</div>
         </div>
         <div class="actions ${pedestrianEnabled ? "" : "single"}">
-          <button @click=${() => this._press(this._config.main_button)}>${mainLabel}</button>
-          ${pedestrianEnabled ? html`<button class="secondary" @click=${() => this._press(this._config.pedestrian_button)}>Otwórz furtkę</button>` : ""}
+          <button @click=${() => this._press(mainButton)}>${mainLabel}</button>
+          ${pedestrianEnabled ? html`<button class="secondary" @click=${() => this._press(pedestrianButton)}>Otwórz furtkę</button>` : ""}
         </div>
       </ha-card>
     `;
