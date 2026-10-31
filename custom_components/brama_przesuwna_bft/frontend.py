@@ -15,7 +15,7 @@ from .const import DOMAIN
 _LOGGER = logging.getLogger(__name__)
 CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-CARD_VERSION = "1.12.7"
+CARD_VERSION = "1.12.8"
 VERSIONED_CARD_URL = f"{CARD_URL}?v={CARD_VERSION}"
 _RESOURCE_MARKER = "_lovelace_resource_registered"
 
