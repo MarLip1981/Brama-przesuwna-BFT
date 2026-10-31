@@ -6,6 +6,7 @@ const ROLES = {
   position: { label: "Pozycja bramy", domains: ["sensor"], test: /pozycja bramy|pozycja|position/i },
   main_button: { label: "Sterowanie bramą", domains: ["button"], test: /otworz zamknij brame|otworz zamknij|sterowanie brama|gate/i },
   pedestrian_button: { label: "Sterowanie furtką", domains: ["button"], test: /otworz jako furtke|furtk|pedestrian/i },
+  photocell: { label: "Fotokomórka — wykrywanie przeszkody", domains: ["binary_sensor"], test: /fotokomorka.*przeszkoda|fotokomorka|photocell/i },
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -36,7 +37,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   get hass() { return this._hass; }
   getCardSize() { return 3; }
   _entity(role) {
-    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button"})[role];
+    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity"})[role];
     return this._config?.radio?.[role] || this._config?.[legacyKey] ||
       this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] || "";
   }
@@ -61,6 +62,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const mode = this._hass.states?.[MODE_ENTITY];
     const positionId = this._entity("position"), statusId = this._entity("status");
     const mainButton = this._entity("main_button"), pedestrianButton = this._entity("pedestrian_button");
+    const photocellId = this._entity("photocell");
+    const photocellDanger = this._state(photocellId) === "on";
     const raw = this._state(positionId), n = Number(raw);
     const valid = raw !== undefined && !["unknown","unavailable"].includes(raw) && Number.isFinite(n);
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : 0;
@@ -146,7 +149,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <text x="13.6" y="27.7" text-anchor="middle" font-size="3.1" font-weight="700" fill="#fff">ULTRA</text>
               <circle cx="23.2" cy="26.8" r="1.45" fill="#c5cbd0" stroke="#5b6268" stroke-width=".45"/>
               <path d="M6 32 H29" stroke="#64717b" stroke-width="1"/>
-            </g></g>
+            </g>
+            ${photocellDanger ? `<g class="photocell-warning" transform="translate(174.5 79)" aria-label="Fotokomórka wykryła przeszkodę"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>` : ""}
+            </g>
           </svg>
         </div>
         <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${pedestrianEnabled ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>` : ""}</div>
