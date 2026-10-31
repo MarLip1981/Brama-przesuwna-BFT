@@ -265,10 +265,24 @@ if (!window.customCards.some(card => card.type === "brama-przesuwna-bft-card")) 
 }
 };
 
-// Extra frontend modules can execute before Home Assistant replaces the native
-// customElements registry with its scoped-registry polyfill. Wait until the
-// application element is defined on the final registry before registering this card.
+// add_extra_js_url modules can run before HA replaces the native registry with
+// its scoped-registry polyfill. Waiting only for window.load is not sufficient:
+// the app entrypoint is itself loaded asynchronously. Detect the final registry,
+// then wait for HA's root element before defining this card.
 const registerAfterHomeAssistantReady = async () => {
+  const initialRegistry = window.customElements;
+  await new Promise((resolve) => {
+    const checkRegistry = () => {
+      const registry = window.customElements;
+      if (registry !== initialRegistry || registry.get("home-assistant")) {
+        resolve();
+        return;
+      }
+      window.setTimeout(checkRegistry, 25);
+    };
+    checkRegistry();
+  });
+
   await window.customElements.whenDefined("home-assistant");
   registerBramaCard();
 };
