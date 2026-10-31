@@ -39,7 +39,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   _entity(role) {
     const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity"})[role];
     return this._config?.radio?.[role] || this._config?.[legacyKey] ||
-      this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] || "";
+      this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] ||
+      (role === "photocell" ? Object.keys(this._hass?.states || {}).find(id =>
+        id.startsWith("binary_sensor.") && /fotokomorka.*przeszkoda|fotokomorka|photocell/i.test(id)) : "") || "";
   }
   _state(id) { return this._hass?.states?.[id]?.state; }
   _press(id) { if (id && this._hass) this._hass.callService("button", "press", { entity_id: id }); }
