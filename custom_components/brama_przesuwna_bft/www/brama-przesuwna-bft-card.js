@@ -265,10 +265,23 @@ if (!window.customCards.some(card => card.type === "brama-przesuwna-bft-card")) 
 }
 };
 
-registerBramaCard();
+// Extra frontend modules can execute before Home Assistant replaces the native
+// customElements registry with its scoped-registry polyfill. Wait until the
+// application element is defined on the final registry before registering this card.
+const registerAfterHomeAssistantReady = async () => {
+  await window.customElements.whenDefined("home-assistant");
+  registerBramaCard();
+};
+
+const scheduleRegistration = () => {
+  registerAfterHomeAssistantReady().catch((error) => {
+    console.error("Brama przesuwna BFT: nie udało się zarejestrować karty", error);
+  });
+};
+
 if (document.readyState === "complete") {
-  window.setTimeout(registerBramaCard, 0);
+  window.setTimeout(scheduleRegistration, 0);
 } else {
-  window.addEventListener("load", registerBramaCard, { once: true });
+  window.addEventListener("load", scheduleRegistration, { once: true });
 }
 })();
