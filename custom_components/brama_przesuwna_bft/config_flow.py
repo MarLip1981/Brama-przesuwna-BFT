@@ -14,6 +14,7 @@ from .const import (
     OPTION_NOTIFY_OPEN,
     OPTION_NOTIFY_TARGETS,
     OPTION_OPENING_DIRECTION,
+    OPTION_LAMP_MODE,
     OPTION_PEDESTRIAN_MODE,
 )
 from .discovery import discover_esphome_gate_nodes
@@ -63,7 +64,7 @@ def _entities_schema(node, defaults):
     return vol.Schema(schema)
 
 
-def _gate_schema(pedestrian_default, direction_default):
+def _gate_schema(pedestrian_default, direction_default, lamp_mode_default):
     return vol.Schema({
         vol.Required(OPTION_PEDESTRIAN_MODE, default=pedestrian_default): selector.BooleanSelector(),
         vol.Required(OPTION_OPENING_DIRECTION, default=direction_default): selector.SelectSelector(
@@ -71,6 +72,16 @@ def _gate_schema(pedestrian_default, direction_default):
                 options=[
                     {"value": "left", "label": "W lewo"},
                     {"value": "right", "label": "W prawo"},
+                ],
+                mode=selector.SelectSelectorMode.DROPDOWN,
+            )
+        ),
+        vol.Required(OPTION_LAMP_MODE, default=lamp_mode_default): selector.SelectSelector(
+            selector.SelectSelectorConfig(
+                options=[
+                    {"value": "auto", "label": "Automatyczny — miga podczas zamykania"},
+                    {"value": "always_blink", "label": "Zawsze miga podczas ruchu bramy"},
+                    {"value": "no_blink", "label": "Bez migania — świeci ciągle podczas ruchu"},
                 ],
                 mode=selector.SelectSelectorMode.DROPDOWN,
             )
@@ -178,6 +189,7 @@ class BramaPrzesuwnaBFTConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "esphome_entities": {key: value for key, value in mapped.items() if value},
                 OPTION_PEDESTRIAN_MODE: bool(mapped.get("pedestrian_button")),
                 OPTION_OPENING_DIRECTION: user_input.get(OPTION_OPENING_DIRECTION, "right"),
+                OPTION_LAMP_MODE: "auto",
                 OPTION_NOTIFY_OPEN: False,
                 OPTION_NOTIFY_CLOSED: False,
                 OPTION_NOTIFY_TARGETS: [DEFAULT_NOTIFY_TARGET],
@@ -278,8 +290,12 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
             OPTION_OPENING_DIRECTION,
             self.config_entry.data.get(OPTION_OPENING_DIRECTION, "right"),
         )
+        lamp_mode = self.config_entry.options.get(
+            OPTION_LAMP_MODE,
+            self.config_entry.data.get(OPTION_LAMP_MODE, "auto"),
+        )
         return self.async_show_form(
-            step_id="gate", data_schema=_gate_schema(pedestrian, direction)
+            step_id="gate", data_schema=_gate_schema(pedestrian, direction, lamp_mode)
         )
 
     async def async_step_notifications(self, user_input=None):
