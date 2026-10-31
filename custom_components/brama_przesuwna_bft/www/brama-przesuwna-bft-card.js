@@ -28,7 +28,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       position_entity: config.position_entity || "",
       main_button: config.main_button || "",
       pedestrian_button: config.pedestrian_button || "",
-      lamp_mode: config.lamp_mode || "auto",
+      lamp_mode: config.lamp_mode || "integration",
     };
     this._render();
   }
@@ -79,9 +79,12 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       closed ? "Brama - Otwórz" : "Brama - Steruj";
     const pedestrianLabel = open ? "Furtka - Zamknij" : "Furtka - Otwórz";
     const closing = /zamykanie/i.test(status);
+    const configuredLampMode = this._config.lamp_mode || "integration";
+    const lampMode = configuredLampMode === "integration"
+      ? (mode?.attributes?.lamp_mode || "auto") : configuredLampMode;
     const shift = 1.9 * pos, lamp = moving || open;
-    const lampBlink = moving && (this._config.lamp_mode === "always_blink" ||
-      (this._config.lamp_mode !== "no_blink" && closing));
+    const lampBlink = moving && (lampMode === "always_blink" ||
+      (lampMode !== "no_blink" && closing));
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
     this.shadowRoot.innerHTML = `
       <style>
@@ -92,7 +95,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
-        .beacon-light{opacity:${lamp ? "1" : "0"};transition:opacity .2s ease}
+        .beacon-emission{transition:opacity .2s ease}
         .beacon-blink{animation:beaconBlink 1s steps(1,end) infinite}
         @keyframes beaconBlink{0%,49.999%{opacity:0}50%,100%{opacity:1}}
         .actions{display:grid;grid-template-columns:${pedestrianEnabled ? "1fr 1fr" : "1fr"};gap:8px;margin-top:8px}
@@ -117,10 +120,11 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <g fill="#637983" stroke="#344953" stroke-width="1"><rect x="5" y="47" width="30" height="11" rx="1"/><rect x="5" y="63" width="30" height="11" rx="1"/><rect x="5" y="79" width="30" height="11" rx="1"/><rect x="5" y="95" width="30" height="11" rx="1"/><rect x="298" y="47" width="97" height="11" rx="1"/><rect x="298" y="63" width="97" height="11" rx="1"/><rect x="298" y="79" width="97" height="11" rx="1"/><rect x="298" y="95" width="97" height="11" rx="1"/></g>
             <rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/>
             <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
-            <g class="beacon-light ${lampBlink ? "beacon-blink" : ""}">
+            <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z"
+                  fill="#596a70" stroke="#46565e" stroke-width="1.5"/>
+            <g class="beacon-emission ${lampBlink ? "beacon-blink" : ""}" style="opacity:${lamp ? "1" : "0"}">
               <ellipse cx="288.5" cy="27" rx="31" ry="25" fill="url(#lampLight)" filter="url(#lampDiffusion)"/>
-              <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="${lamp ? "#ffad35" : "#687780"}" stroke="${lamp ? "#ffca75" : "#46565e"}" stroke-width="1.5"/>
-              <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="${lamp ? "#fff0b1" : "#839097"}" opacity="${lamp ? "1" : ".45"}"/>
+              <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="#fff0b1"/>
             </g><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
             <g class="gate-leaf" transform="translate(${shift},0)">
               <rect x="51" y="44" width="228" height="83" fill="url(#gateFill)" stroke="#344953" stroke-width="2"/>
@@ -277,19 +281,21 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
         button{padding:10px 14px;border:0;border-radius:8px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;cursor:pointer}
         button:disabled{opacity:.5}.hint{color:var(--secondary-text-color);font-size:12px}
       </style>
-      <div class="field"><label>Nazwa karty</label><input class="name" value="${esc(this._config.name||"")}"></div>
-      <div class="field"><label>Tryb lampki ostrzegawczej</label><select class="lamp-mode">
-        <option value="auto" ${(!this._config.lamp_mode || this._config.lamp_mode==="auto")?"selected":""}>Automatyczny — miga podczas zamykania</option>
-        <option value="always_blink" ${this._config.lamp_mode==="always_blink"?"selected":""}>Zawsze miga podczas ruchu bramy</option>
-        <option value="no_blink" ${this._config.lamp_mode==="no_blink"?"selected":""}>Bez migania — świeci ciągle podczas ruchu</option>
-      </select></div>
       <p class="hint">${this._loading?"Wykrywanie sterownika i encji…":esc(this._deviceName)}</p>
       <div class="field"><button class="detect" ${this._loading?"disabled":""}>Wykryj sterownik ponownie</button></div>
       ${Object.entries(ROLES).map(([role,meta])=>`
         <div class="field"><label>${meta.label}</label><select data-role="${role}">
           <option value="">— wybierz encję —</option>${options(role)}
         </select></div>`).join("")}
-      <p class="hint">Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT. Listy pozwalają też wskazać ręcznie dowolną encję właściwej domeny.</p>`;
+      <p class="hint">Najpierw wybierz sterownik i sprawdź przypisane encje. Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT; listy pozwalają też wskazać je ręcznie.</p>
+      <div class="field"><label>Nazwa karty</label><input class="name" value="${esc(this._config.name||"")}"></div>
+      <div class="field"><label>Tryb lampki na tej karcie</label><select class="lamp-mode">
+        <option value="integration" ${(!this._config.lamp_mode || this._config.lamp_mode==="integration")?"selected":""}>Użyj ustawienia integracji</option>
+        <option value="auto" ${this._config.lamp_mode==="auto"?"selected":""}>Automatyczny — miga podczas zamykania</option>
+        <option value="always_blink" ${this._config.lamp_mode==="always_blink"?"selected":""}>Zawsze miga podczas ruchu bramy</option>
+        <option value="no_blink" ${this._config.lamp_mode==="no_blink"?"selected":""}>Bez migania — świeci ciągle podczas ruchu</option>
+      </select></div>
+`;
     this.shadowRoot.querySelector(".name")?.addEventListener("change", e => {
       this._config = {...this._config,name:e.target.value}; this._fire();
     });
