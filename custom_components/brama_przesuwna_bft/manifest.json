@@ -1,14 +1,15 @@
 {
   "domain": "brama_przesuwna_bft",
   "name": "Brama przesuwna BFT",
-  "version": "1.12.9",
+  "version": "1.13.0",
   "documentation": "https://github.com/MarLip1981/Brama-przesuwna-BFT",
   "issue_tracker": "https://github.com/MarLip1981/Brama-przesuwna-BFT/issues",
   "config_flow": true,
   "single_config_entry": true,
   "dependencies": [
     "http",
-    "frontend"
+    "frontend",
+    "lovelace"
   ],
   "requirements": [],
   "codeowners": [
