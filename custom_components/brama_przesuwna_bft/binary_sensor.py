@@ -7,7 +7,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import DOMAIN, OPTION_OPENING_DIRECTION, OPTION_PEDESTRIAN_MODE
+from .const import DOMAIN, OPTION_LAMP_MODE, OPTION_OPENING_DIRECTION, OPTION_PEDESTRIAN_MODE
 
 
 async def async_setup_entry(
@@ -45,6 +45,7 @@ class PedestrianModeSensor(BinarySensorEntity):
         """Expose the configured opening direction to the card."""
         return {
             "opening_direction": self._option(OPTION_OPENING_DIRECTION, "left"),
+            "lamp_mode": self._option(OPTION_LAMP_MODE, "auto"),
             "esphome_device": self._entry.options.get(
                 "esphome_device_name", self._entry.data.get("esphome_device_name")
             ),
