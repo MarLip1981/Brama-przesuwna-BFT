@@ -1,4 +1,6 @@
 /* Brama przesuwna BFT — native Web Components, no Lit dependency. */
+(() => {
+const registerBramaCard = () => {
 const ROLES = {
   status: { label: "Stan bramy", domains: ["sensor"], test: /dokladny stan bramy|dokladny stan|stan bramy|gate status/i },
   position: { label: "Pozycja bramy", domains: ["sensor"], test: /pozycja bramy|pozycja|position/i },
@@ -261,3 +263,12 @@ if (!window.customCards.some(card => card.type === "brama-przesuwna-bft-card")) 
     },
   });
 }
+};
+
+registerBramaCard();
+if (document.readyState === "complete") {
+  window.setTimeout(registerBramaCard, 0);
+} else {
+  window.addEventListener("load", registerBramaCard, { once: true });
+}
+})();
