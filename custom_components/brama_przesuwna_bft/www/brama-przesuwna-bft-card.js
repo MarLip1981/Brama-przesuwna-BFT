@@ -71,7 +71,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const slide = (direction === "right" ? 1 : -1) * pos * 1.42;
     const lampOn = moving || open;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
-    this.shadowRoot.innerHTML = \`
+    this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color)}
         ha-card{display:block;padding:16px;overflow:hidden;background:var(--ha-card-background,var(--card-background-color));border-radius:var(--ha-card-border-radius,12px);box-shadow:var(--ha-card-box-shadow,none)}
@@ -82,9 +82,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .status.moving .dot{background:#ffb300;box-shadow:0 0 8px #ffb30080}
         .scene{margin:12px 0 10px;padding:5px 0 0;border-radius:12px;background:var(--secondary-background-color);border:1px solid var(--divider-color);overflow:hidden}
         svg{display:block;width:100%;height:auto;max-height:230px}
-        .gate-leaf{transform:translateX(\${slide}px);transition:transform 1.2s cubic-bezier(.2,.75,.25,1)}
-        .lamp-glow{opacity:\${lampOn ? ".95" : "0"};transition:opacity .45s ease}
-        .lamp-core{fill:\${lampOn ? "#ffd56a" : "#9a6b20"};transition:fill .35s ease}
+        .gate-leaf{transform:translateX(${slide}px);transition:transform 1.2s cubic-bezier(.2,.75,.25,1)}
+        .lamp-glow{opacity:${lampOn ? ".95" : "0"};transition:opacity .45s ease}
+        .lamp-core{fill:${lampOn ? "#ffd56a" : "#9a6b20"};transition:fill .35s ease}
         .meta{color:var(--secondary-text-color);font-size:13px;margin:5px 2px 9px}
         .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions.single{grid-template-columns:1fr}
         button{min-height:48px;border:0;border-radius:14px;padding:10px;background:var(--primary-color);color:var(--text-primary-color);font:inherit;font-weight:600;cursor:pointer}
@@ -92,8 +92,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="head" role="button" tabindex="0">
-          <h2>\${esc(this._config.name)}</h2>
-          <div class="status \${statusClass}"><span class="dot"></span><span>\${esc(status)}\${moving && valid ? \` · \${pos}%\` : ""}</span></div>
+          <h2>${esc(this._config.name)}</h2>
+          <div class="status ${statusClass}"><span class="dot"></span><span>${esc(status)}${moving && valid ? ` · ${pos}%` : ""}</span></div>
         </div>
         <div class="scene">
           <svg viewBox="0 0 400 190" role="img" aria-label="Ilustracja bramy przesuwnej z napędem BFT">
@@ -147,12 +147,12 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             </g>
           </svg>
         </div>
-        <div class="meta">Pozycja bramy: <strong>\${valid ? pos + "%" : "brak danych"}</strong> · Kierunek: \${direction === "right" ? "w prawo" : "w lewo"} (od strony podwórka)</div>
-        <div class="actions \${pedestrianEnabled ? "" : "single"}">
-          <button class="main">\${mainLabel}</button>
-          \${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}
+        <div class="meta">Pozycja bramy: <strong>${valid ? pos + "%" : "brak danych"}</strong> · Kierunek: ${direction === "right" ? "w prawo" : "w lewo"} (od strony podwórka)</div>
+        <div class="actions ${pedestrianEnabled ? "" : "single"}">
+          <button class="main">${mainLabel}</button>
+          ${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}
         </div>
-      </ha-card>\`;
+      </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
