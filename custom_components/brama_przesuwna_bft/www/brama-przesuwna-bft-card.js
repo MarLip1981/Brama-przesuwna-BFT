@@ -65,9 +65,11 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : 0;
     const status = this._state(statusId) || "Brak stanu";
     const moving = /otwieranie|zamykanie/i.test(status), open = /otwarta/i.test(status), closed = /zamknięta/i.test(status);
-    const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
     const direction = mode?.attributes?.opening_direction || "right";
-    const mainLabel = open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
+    // Labels and actions follow the original YAML card state machine.
+    const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
+      closed ? "Brama - Otwórz" : "Brama - Steruj";
+    const pedestrianLabel = open ? "Furtka - Zamknij" : "Furtka - Otwórz";
     const shift = 1.9 * pos * (direction === "right" ? 1 : -1), lamp = moving || open;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
     this.shadowRoot.innerHTML = `
@@ -79,10 +81,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}.lamp-glow{opacity:${lamp ? "1" : "0"};transition:opacity .45s ease}
-        .meta{color:var(--secondary-text-color);font-size:13px;margin:5px 4px 9px}
-        .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions.single{grid-template-columns:1fr}
+        .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
         button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
-        button.main{color:var(--primary-color)}
+        button.main{color:#429ee8}
+        button.pedestrian{color:#39b982}
       </style>
       <ha-card>
         <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(moving && valid ? status + " " + pos + "%" : status)}</div></div>
@@ -113,8 +115,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>
           </svg>
         </div>
-        <div class="meta">Pozycja bramy: <strong>${valid ? pos + "%" : "brak danych"}</strong> · Kierunek otwierania: ${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka)</div>
-        <div class="actions ${pedestrianEnabled ? "" : "single"}"><button class="main">${mainLabel}</button>${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}</div>
+        <div class="actions"><button class="main">${mainLabel}</button><button class="pedestrian">${pedestrianLabel}</button></div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
@@ -122,7 +123,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
     this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(mainButton));
-    this.shadowRoot.querySelector(".pedestrian")?.addEventListener("click", () => this._press(pedestrianButton));
+    this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
+      this._press(open ? mainButton : pedestrianButton));
   }
   static getConfigElement() { return document.createElement("brama-przesuwna-bft-card-editor"); }
   static getStubConfig() { return {}; }
