@@ -70,7 +70,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const mainLabel = open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
     const shift = 1.9 * pos * (direction === "right" ? 1 : -1), lamp = moving || open;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
-    this.shadowRoot.innerHTML = \`
+    this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color)}
         ha-card{display:block;padding:12px;overflow:hidden;border-radius:22px;background:var(--ha-card-background,var(--card-background-color));box-shadow:var(--ha-card-box-shadow,none)}
@@ -78,14 +78,14 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
-        .gate-leaf{transition:transform 1.05s linear}.lamp-glow{opacity:\${lamp ? "1" : "0"};transition:opacity .45s ease}
+        .gate-leaf{transition:transform 1.05s linear}.lamp-glow{opacity:${lamp ? "1" : "0"};transition:opacity .45s ease}
         .meta{color:var(--secondary-text-color);font-size:13px;margin:5px 4px 9px}
         .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions.single{grid-template-columns:1fr}
         button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
         button.main{color:var(--primary-color)}
       </style>
       <ha-card>
-        <div class="head" role="button" tabindex="0"><h2>\${esc(this._config.name)}</h2><div class="status \${statusClass}">\${esc(moving && valid ? status + " " + pos + "%" : status)}</div></div>
+        <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(moving && valid ? status + " " + pos + "%" : status)}</div></div>
         <div class="scene">
           <svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brama wjazdowa">
             <defs>
@@ -100,9 +100,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/>
             <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
             <g class="lamp-glow"><path d="M288 20 C275 28 263 37 252 48 C242 58 233 70 224 82 C247 75 266 63 279 48 C286 39 290 29 288 20Z" fill="url(#lampLight)" filter="url(#lampDiffusion)"/></g>
-            <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="\${lamp ? "#ffad35" : "#687780"}" stroke="\${lamp ? "#ffca75" : "#46565e"}" stroke-width="1.5"/>
-            <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="\${lamp ? "#fff0b1" : "#839097"}" opacity="\${lamp ? "1" : ".45"}"/><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
-            <g class="gate-leaf" transform="translate(\${shift},0)">
+            <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="${lamp ? "#ffad35" : "#687780"}" stroke="${lamp ? "#ffca75" : "#46565e"}" stroke-width="1.5"/>
+            <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="${lamp ? "#fff0b1" : "#839097"}" opacity="${lamp ? "1" : ".45"}"/><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
+            <g class="gate-leaf" transform="translate(${shift},0)">
               <rect x="51" y="44" width="228" height="83" fill="url(#gateFill)" stroke="#344953" stroke-width="2"/>
               <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#8fa2aa" stroke-width="9" stroke-linecap="round"/>
               <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#425760" stroke-width="1.4" fill="none"/>
@@ -113,9 +113,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>
           </svg>
         </div>
-        <div class="meta">Pozycja bramy: <strong>\${valid ? pos + "%" : "brak danych"}</strong> · Kierunek otwierania: \${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka)</div>
-        <div class="actions \${pedestrianEnabled ? "" : "single"}"><button class="main">\${mainLabel}</button>\${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}</div>
-      </ha-card>\`;
+        <div class="meta">Pozycja bramy: <strong>${valid ? pos + "%" : "brak danych"}</strong> · Kierunek otwierania: ${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka)</div>
+        <div class="actions ${pedestrianEnabled ? "" : "single"}"><button class="main">${mainLabel}</button>${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}</div>
+      </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
