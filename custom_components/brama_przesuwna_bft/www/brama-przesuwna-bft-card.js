@@ -68,101 +68,59 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
     const direction = mode?.attributes?.opening_direction || "right";
     const mainLabel = open ? "Zamknij bramę" : closed ? "Otwórz bramę" : "Steruj bramą";
-    const slide = (direction === "right" ? 1 : -1) * pos * 1.42;
-    const lampOn = moving || open;
+    const shift = 1.9 * pos * (direction === "right" ? 1 : -1), lamp = moving || open;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
-    this.shadowRoot.innerHTML = `
+    this.shadowRoot.innerHTML = \`
       <style>
         :host{display:block;color:var(--primary-text-color)}
-        ha-card{display:block;padding:16px;overflow:hidden;background:var(--ha-card-background,var(--card-background-color));border-radius:var(--ha-card-border-radius,12px);box-shadow:var(--ha-card-box-shadow,none)}
-        .head{display:flex;justify-content:space-between;align-items:center;gap:12px;cursor:pointer;user-select:none}
-        h2{font-size:20px;margin:0;font-weight:500}.status{font-weight:600;text-align:right;display:flex;align-items:center;gap:8px}
-        .dot{width:9px;height:9px;border-radius:50%;display:inline-block;background:var(--secondary-text-color)}
-        .status.closed .dot{background:#43a047}.status.open .dot{background:#e53935;box-shadow:0 0 8px #e5393580}
-        .status.moving .dot{background:#ffb300;box-shadow:0 0 8px #ffb30080}
-        .scene{margin:12px 0 10px;padding:5px 0 0;border-radius:12px;background:var(--secondary-background-color);border:1px solid var(--divider-color);overflow:hidden}
-        svg{display:block;width:100%;height:auto;max-height:230px}
-        .gate-leaf{transform:translateX(${slide}px);transition:transform 1.2s cubic-bezier(.2,.75,.25,1)}
-        .lamp-glow{opacity:${lampOn ? ".95" : "0"};transition:opacity .45s ease}
-        .lamp-core{fill:${lampOn ? "#ffd56a" : "#9a6b20"};transition:fill .35s ease}
-        .meta{color:var(--secondary-text-color);font-size:13px;margin:5px 2px 9px}
+        ha-card{display:block;padding:12px;overflow:hidden;border-radius:22px;background:var(--ha-card-background,var(--card-background-color));box-shadow:var(--ha-card-box-shadow,none)}
+        .head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px}
+        h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
+        .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
+        .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
+        .gate-leaf{transition:transform 1.05s linear}.lamp-glow{opacity:\${lamp ? "1" : "0"};transition:opacity .45s ease}
+        .meta{color:var(--secondary-text-color);font-size:13px;margin:5px 4px 9px}
         .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}.actions.single{grid-template-columns:1fr}
-        button{min-height:48px;border:0;border-radius:14px;padding:10px;background:var(--primary-color);color:var(--text-primary-color);font:inherit;font-weight:600;cursor:pointer}
-        button.secondary{background:var(--secondary-background-color);color:var(--primary-text-color)}
+        button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
+        button.main{color:var(--primary-color)}
       </style>
       <ha-card>
-        <div class="head" role="button" tabindex="0">
-          <h2>${esc(this._config.name)}</h2>
-          <div class="status ${statusClass}"><span class="dot"></span><span>${esc(status)}${moving && valid ? ` · ${pos}%` : ""}</span></div>
-        </div>
+        <div class="head" role="button" tabindex="0"><h2>\${esc(this._config.name)}</h2><div class="status \${statusClass}">\${esc(moving && valid ? status + " " + pos + "%" : status)}</div></div>
         <div class="scene">
-          <svg viewBox="0 0 400 190" role="img" aria-label="Ilustracja bramy przesuwnej z napędem BFT">
+          <svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brama wjazdowa">
             <defs>
-              <linearGradient id="wall" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#aeb5b8"/><stop offset="1" stop-color="#747d82"/></linearGradient>
-              <linearGradient id="gateFill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#59636a"/><stop offset=".5" stop-color="#303a40"/><stop offset="1" stop-color="#1e272c"/></linearGradient>
-              <linearGradient id="motorBody" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#42494d"/><stop offset=".45" stop-color="#202629"/><stop offset="1" stop-color="#101416"/></linearGradient>
-              <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#737b7d"/><stop offset="1" stop-color="#444b4d"/></linearGradient>
-              <linearGradient id="lampBeam" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#ffd978" stop-opacity=".5"/><stop offset=".6" stop-color="#ffca55" stop-opacity=".17"/><stop offset="1" stop-color="#ffbf42" stop-opacity="0"/></linearGradient>
-              <filter id="softSpill" x="-80%" y="-100%" width="260%" height="300%"><feGaussianBlur stdDeviation="8"/></filter>
-              <filter id="lampBloom" x="-150%" y="-150%" width="400%" height="400%"><feGaussianBlur stdDeviation="3"/></filter>
-              <filter id="motorShadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="3"/></filter>
-              <clipPath id="sceneClip"><rect width="400" height="190" rx="10"/></clipPath>
+              <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#607984" stop-opacity=".08"/><stop offset="100%" stop-color="#182b35" stop-opacity=".25"/></linearGradient>
+              <linearGradient id="gateFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#465b65"/><stop offset="50%" stop-color="#80949d"/><stop offset="100%" stop-color="#465b65"/></linearGradient>
+              <linearGradient id="lampLight" x1="0" y1="0" x2=".8" y2="1"><stop offset="0%" stop-color="#fff0b1" stop-opacity=".38"/><stop offset="45%" stop-color="#ffbd58" stop-opacity=".17"/><stop offset="100%" stop-color="#ff9d28" stop-opacity="0"/></linearGradient>
+              <filter id="lampDiffusion" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
             </defs>
-            <g clip-path="url(#sceneClip)">
-              <rect width="400" height="190" fill="#899397"/>
-              <path d="M0 142H400V190H0Z" fill="url(#ground)"/><path d="M0 142H400" stroke="#c0c6c7" stroke-opacity=".5" stroke-width="2"/>
-              <g class="lamp-glow">
-                <path d="M43 49 C66 52 87 67 104 89 C117 106 128 120 144 137 C119 132 96 121 77 105 C58 89 47 70 43 49Z" fill="url(#lampBeam)" filter="url(#softSpill)"/>
-                <path d="M45 48 C64 56 82 69 97 88 C108 102 119 117 128 128" fill="none" stroke="#ffd36a" stroke-opacity=".3" stroke-width="12" stroke-linecap="round" filter="url(#lampBloom)"/>
-              </g>
-              <path d="M0 74H400V112H0Z" fill="url(#wall)" opacity=".48"/>
-              <path d="M18 43H65V151H18Z" fill="#687277"/><path d="M22 47H61V146H22Z" fill="url(#wall)"/>
-              <path d="M330 43H378V151H330Z" fill="#687277"/><path d="M334 47H374V146H334Z" fill="url(#wall)"/>
-              <path d="M14 40H68V49H14Z M326 40H382V49H326Z" fill="#d0d4d4"/>
-              <path d="M62 145H344" stroke="#1c2428" stroke-width="5"/>
-              <g class="gate-leaf">
-                <rect x="62" y="65" width="267" height="78" rx="1" fill="url(#gateFill)" stroke="#172024" stroke-width="2"/>
-                <path d="M70 68V140 M84 68V140 M98 68V140 M112 68V140 M126 68V140 M140 68V140 M154 68V140 M168 68V140 M182 68V140 M196 68V140 M210 68V140 M224 68V140 M238 68V140 M252 68V140 M266 68V140 M280 68V140 M294 68V140 M308 68V140 M322 68V140" stroke="#899398" stroke-opacity=".38" stroke-width="2"/>
-                <path d="M62 65H329 M62 143H329" stroke="#b2b9bb" stroke-opacity=".42" stroke-width="2"/>
-                <path d="M62 65L79 78V130L62 143Z" fill="#202a2f" opacity=".8"/>
-              </g>
-              <!-- stationary foreground BFT DEIMOS ULTRA operator -->
-              <ellipse cx="310" cy="157" rx="39" ry="7" fill="#101516" opacity=".45" filter="url(#motorShadow)"/>
-              <path d="M280 111L289 102Q292 99 299 99H330Q337 99 340 106L346 119V151Q346 157 340 159H289Q281 158 280 151Z" fill="#111719" stroke="#080c0d" stroke-width="2"/>
-              <path d="M284 111L292 104Q295 102 301 102H328Q334 102 337 108L342 120V148Q342 153 337 154H290Q285 153 284 148Z" fill="url(#motorBody)" stroke="#566065" stroke-width="1"/>
-              <path d="M290 108H328Q332 108 335 113L338 119H288Z" fill="#525b60" opacity=".42"/>
-              <path d="M287 121H339V146Q339 150 334 150H292Q287 150 287 146Z" fill="#202629" stroke="#0b1012" stroke-width="1"/>
-              <path d="M294 111H326Q330 111 330 115V119H294Z" fill="#b8bec0" opacity=".92"/>
-              <text x="312" y="118" text-anchor="middle" font-size="8" font-weight="800" fill="#b51f2b" letter-spacing="1">BFT</text>
-              <path d="M294 126H331V141H294Z" fill="#252c30" stroke="#687176" stroke-width=".8"/><path d="M298 129H327V136H298Z" fill="#a71f2b"/>
-              <text x="312.5" y="134.5" text-anchor="middle" font-size="5.8" font-weight="800" fill="#f2eeee" letter-spacing=".8">ULTRA</text>
-              <circle cx="333" cy="143" r="3.1" fill="#aeb5b7" stroke="#080c0d" stroke-width="1"/><path d="M332 141L334 145" stroke="#333a3d" stroke-width="1"/>
-              <path d="M280 151H346V157H280Z" fill="#171d20"/><path d="M286 157H340L336 162H291Z" fill="#343c40"/>
-              <!-- beacon -->
-              <path d="M35 37H49V45H35Z" fill="#343c3f"/>
-              <rect x="34" y="27" width="16" height="12" rx="3" fill="#333b3e" stroke="#171d20" stroke-width="1.5"/>
-              <rect x="36" y="29" width="12" height="7" rx="2" class="lamp-core"/>
-              <path d="M36 38H48" stroke="#111719" stroke-width="1.5"/><path d="M31 42H53" stroke="#252d30" stroke-width="2"/>
-              <text x="200" y="178" text-anchor="middle" font-size="9" fill="#f0f2f2" opacity=".75">BRAMA PRZESUWNA</text>
+            <rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/>
+            <path d="M5 130 H395" stroke="#637983" stroke-width="2" opacity=".7"/><path d="M5 141 H395" stroke="#637983" stroke-width="1" opacity=".22"/>
+            <g fill="#637983" stroke="#344953" stroke-width="1"><rect x="5" y="47" width="30" height="11" rx="1"/><rect x="5" y="63" width="30" height="11" rx="1"/><rect x="5" y="79" width="30" height="11" rx="1"/><rect x="5" y="95" width="30" height="11" rx="1"/><rect x="298" y="47" width="97" height="11" rx="1"/><rect x="298" y="63" width="97" height="11" rx="1"/><rect x="298" y="79" width="97" height="11" rx="1"/><rect x="298" y="95" width="97" height="11" rx="1"/></g>
+            <rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/>
+            <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
+            <g class="lamp-glow"><path d="M288 20 C275 28 263 37 252 48 C242 58 233 70 224 82 C247 75 266 63 279 48 C286 39 290 29 288 20Z" fill="url(#lampLight)" filter="url(#lampDiffusion)"/></g>
+            <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="\${lamp ? "#ffad35" : "#687780"}" stroke="\${lamp ? "#ffca75" : "#46565e"}" stroke-width="1.5"/>
+            <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="\${lamp ? "#fff0b1" : "#839097"}" opacity="\${lamp ? "1" : ".45"}"/><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
+            <g class="gate-leaf" transform="translate(\${shift},0)">
+              <rect x="51" y="44" width="228" height="83" fill="url(#gateFill)" stroke="#344953" stroke-width="2"/>
+              <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#8fa2aa" stroke-width="9" stroke-linecap="round"/>
+              <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#425760" stroke-width="1.4" fill="none"/>
+              <rect x="51" y="114" width="228" height="6" fill="#344953"/><rect x="51" y="122" width="228" height="5" fill="#526872"/>
+              <path d="M279 44 L355 101 L355 127 L279 127 Z" fill="#536a74" fill-opacity=".7" stroke="#344953" stroke-width="3"/><path d="M286 54 L344 101 M286 73 L324 101" stroke="#91a3ab" stroke-width="3" opacity=".75"/>
             </g>
+            <!-- Napęd zachowuje oryginalne położenie i wymiary; jest tylko rysowany po skrzydle -->
+            <g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>
           </svg>
         </div>
-        <div class="meta">Pozycja bramy: <strong>${valid ? pos + "%" : "brak danych"}</strong> · Kierunek: ${direction === "right" ? "w prawo" : "w lewo"} (od strony podwórka)</div>
-        <div class="actions ${pedestrianEnabled ? "" : "single"}">
-          <button class="main">${mainLabel}</button>
-          ${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}
-        </div>
-      </ha-card>`;
+        <div class="meta">Pozycja bramy: <strong>\${valid ? pos + "%" : "brak danych"}</strong> · Kierunek otwierania: \${direction === "right" ? "w prawo" : "w lewo"} (patrząc od strony podwórka)</div>
+        <div class="actions \${pedestrianEnabled ? "" : "single"}"><button class="main">\${mainLabel}</button>\${pedestrianEnabled ? '<button class="secondary pedestrian">Otwórz furtkę</button>' : ""}</div>
+      </ha-card>\`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
-    head.addEventListener("click", () => {
-      if (this._holdFired) { this._holdFired = false; return; }
-      this._moreInfo(this._entity("status"));
-    });
-    head.addEventListener("keydown", e => {
-      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); }
-    });
+    head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
+    head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
     this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(mainButton));
     this.shadowRoot.querySelector(".pedestrian")?.addEventListener("click", () => this._press(pedestrianButton));
   }
