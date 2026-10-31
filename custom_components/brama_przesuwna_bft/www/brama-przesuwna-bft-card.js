@@ -7,6 +7,7 @@ const ROLES = {
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const normalize = (value) => String(value ?? "").normalize("NFKD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 
 class BramaPrzesuwnaBFTCard extends HTMLElement {
   constructor() {
@@ -251,7 +252,7 @@ if (!window.customCards.some(card => card.type === "brama-przesuwna-bft-card")) 
     getEntitySuggestion: (hass, entityId) => {
       const state = hass?.states?.[entityId];
       const label = state?.attributes?.friendly_name || "";
-      const searchable = `${entityId} ${label}`;
+      const searchable = normalize(`${entityId} ${label}`);
       const isGateEntity = Object.values(ROLES).some(role => role.test.test(searchable));
       if (!isGateEntity) return null;
       return {
