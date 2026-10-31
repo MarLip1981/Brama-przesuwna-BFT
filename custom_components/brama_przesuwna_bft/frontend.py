@@ -12,7 +12,7 @@ from homeassistant.core import HomeAssistant
 _LOGGER = logging.getLogger(__name__)
 _CARD_PATH = Path(__file__).parent / "www" / "brama-przesuwna-bft-card.js"
 _CARD_URL = "/brama_przesuwna_bft/brama-przesuwna-bft-card.js"
-_CARD_VERSION = "1.12.5"
+_CARD_VERSION = "1.12.6"
 _CARD_MODULE_URL = f"{_CARD_URL}?v={_CARD_VERSION}"
 
 
