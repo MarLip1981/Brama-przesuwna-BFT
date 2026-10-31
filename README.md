@@ -57,7 +57,7 @@ Integracja rejestruje własną kartę Lovelace podczas uruchamiania i ponawia pr
 
 W ustawieniach integracji dostępna jest opcja **Korzystaj z trybu furtki**. Gdy jest wyłączona, karta pokazuje wyłącznie sterowanie bramą, bez przycisku „Otwórz furtkę”. Po włączeniu opcji przycisk furtki pojawia się na karcie. Opcja jest domyślnie wyłączona.
 
-W edytorze karty można również ustawić **Tryb lampki ostrzegawczej**: automatyczny (miga co 0,5 s podczas zamykania), zawsze miga podczas ruchu bramy albo bez migania (świeci ciągle podczas ruchu). Ustawienie dotyczy wyłącznie animacji karty i nie zmienia pracy fizycznej lampki ani sterowania napędem.
+W ustawieniach integracji, w sekcji **Działanie bramy i lampka**, można ustawić tryb lampki ostrzegawczej: automatyczny (miga co 0,5 s podczas zamykania), zawsze miga podczas ruchu bramy albo bez migania (świeci ciągle podczas ruchu). Edytor konkretnej karty pozwala użyć ustawienia integracji lub je nadpisać. Ustawienie dotyczy wyłącznie efektu świetlnego na karcie; nie zmienia fizycznej lampki ani sterowania napędem. Obudowa lampki jest zawsze widoczna — animowane jest tylko światło.
 
 Karta ma domyślne identyfikatory encji zgodne z firmware tego projektu. Jeżeli zmienisz nazwę urządzenia lub identyfikatory encji w ESPHome, można je poprawić w edytorze karty. Integracja nie wstawia automatycznie karty do istniejącego dashboardu — nie zmienia samodzielnie układu pulpitu użytkownika.
 
