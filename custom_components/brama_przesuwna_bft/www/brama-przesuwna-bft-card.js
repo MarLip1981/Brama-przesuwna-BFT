@@ -72,6 +72,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     else if (/zamykanie/i.test(status)) statusLabel = "● Zamykanie" + (valid ? " " + pos + "%" : "");
     else if (!status || ["unknown","unavailable","Brak stanu"].includes(status)) statusLabel = "Brak stanu";
     const direction = mode?.attributes?.opening_direction || "right";
+    const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
     // Labels and actions follow the original YAML card state machine.
     const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
       closed ? "Brama - Otwórz" : "Brama - Steruj";
@@ -87,7 +88,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}.lamp-glow{opacity:${lamp ? "1" : "0"};transition:opacity .45s ease}
-        .actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+        .actions{display:grid;grid-template-columns:${pedestrianEnabled ? "1fr 1fr" : "1fr"};gap:8px;margin-top:8px}
         button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
         button.main{color:#429ee8}
         button.pedestrian{color:#39b982}
@@ -119,11 +120,23 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <rect x="51" y="114" width="228" height="6" fill="#344953"/><rect x="51" y="122" width="228" height="5" fill="#526872"/>
               <path d="M279 44 L355 101 L355 127 L279 127 Z" fill="#536a74" fill-opacity=".7" stroke="#344953" stroke-width="3"/><path d="M286 54 L344 101 M286 73 L324 101" stroke="#91a3ab" stroke-width="3" opacity=".75"/>
             </g>
-            <!-- Napęd zachowuje oryginalne położenie i wymiary; jest tylko rysowany po skrzydle -->
-            <g><rect x="303" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M308 114 H322 M308 119 H322" stroke="#84969d" stroke-width="1.5"/></g></g>
+            <!-- Stylizowany napęd BFT DEIMOS ULTRA BT B600: obudowa, logo i dolny panel ULTRA -->
+            <g transform="translate(303 94)">
+              <path d="M4 6 Q4 2 9 1 L25 1 Q30 2 30 7 L30 29 L4 29 Z"
+                    fill="#172b49" stroke="#52647b" stroke-width="1.2"/>
+              <path d="M7 5 Q8 3 11 3 H24 Q27 3 28 6 V24 H7 Z"
+                    fill="#203958" stroke="#314d6c" stroke-width=".7"/>
+              <rect x="15" y="7" width="8" height="5" rx="1" fill="#d9272e" stroke="#f05a5f" stroke-width=".45"/>
+              <text x="19" y="10.8" text-anchor="middle" font-size="3.2" font-weight="700" fill="#fff">BFT</text>
+              <path d="M4 23 H30 V29 Q30 32 27 32 H7 Q4 32 4 29 Z" fill="#aeb7bd" stroke="#d2d8dc" stroke-width=".7"/>
+              <rect x="8" y="24" width="18" height="5.5" rx=".8" fill="#bd202b" stroke="#e35a60" stroke-width=".5"/>
+              <text x="13.6" y="27.7" text-anchor="middle" font-size="3.1" font-weight="700" fill="#fff">ULTRA</text>
+              <circle cx="23.2" cy="26.8" r="1.45" fill="#c5cbd0" stroke="#5b6268" stroke-width=".45"/>
+              <path d="M6 32 H29" stroke="#64717b" stroke-width="1"/>
+            </g></g>
           </svg>
         </div>
-        <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button><button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button></div>
+        <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${pedestrianEnabled ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>` : ""}</div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
@@ -131,8 +144,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
     this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(mainButton));
-    this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
-      this._press(open ? mainButton : pedestrianButton));
+    if (pedestrianEnabled) {
+      this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
+        this._press(open ? mainButton : pedestrianButton));
+    }
   }
   static getConfigElement() { return document.createElement("brama-przesuwna-bft-card-editor"); }
   static getStubConfig() { return {}; }
