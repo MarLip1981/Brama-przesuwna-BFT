@@ -76,7 +76,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
       closed ? "Brama - Otwórz" : "Brama - Steruj";
     const pedestrianLabel = open ? "Furtka - Zamknij" : "Furtka - Otwórz";
-    const shift = 1.9 * pos * (direction === "right" ? 1 : -1), lamp = moving || open;
+    const shift = 1.9 * pos, lamp = moving || open;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
     this.shadowRoot.innerHTML = `
       <style>
@@ -101,15 +101,15 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <defs>
               <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#607984" stop-opacity=".08"/><stop offset="100%" stop-color="#182b35" stop-opacity=".25"/></linearGradient>
               <linearGradient id="gateFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#465b65"/><stop offset="50%" stop-color="#80949d"/><stop offset="100%" stop-color="#465b65"/></linearGradient>
-              <linearGradient id="lampLight" x1="0" y1="0" x2=".8" y2="1"><stop offset="0%" stop-color="#fff0b1" stop-opacity=".38"/><stop offset="45%" stop-color="#ffbd58" stop-opacity=".17"/><stop offset="100%" stop-color="#ff9d28" stop-opacity="0"/></linearGradient>
+              <radialGradient id="lampLight"><stop offset="0%" stop-color="#ffe3a0" stop-opacity=".34"/><stop offset="48%" stop-color="#ffc15e" stop-opacity=".17"/><stop offset="100%" stop-color="#ffad35" stop-opacity="0"/></radialGradient>
               <filter id="lampDiffusion" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
             </defs>
-            <rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/>
+            <g transform="${direction === "left" ? "translate(400 0) scale(-1 1)" : ""}"><rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/>
             <path d="M5 130 H395" stroke="#637983" stroke-width="2" opacity=".7"/><path d="M5 141 H395" stroke="#637983" stroke-width="1" opacity=".22"/>
             <g fill="#637983" stroke="#344953" stroke-width="1"><rect x="5" y="47" width="30" height="11" rx="1"/><rect x="5" y="63" width="30" height="11" rx="1"/><rect x="5" y="79" width="30" height="11" rx="1"/><rect x="5" y="95" width="30" height="11" rx="1"/><rect x="298" y="47" width="97" height="11" rx="1"/><rect x="298" y="63" width="97" height="11" rx="1"/><rect x="298" y="79" width="97" height="11" rx="1"/><rect x="298" y="95" width="97" height="11" rx="1"/></g>
             <rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/>
             <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
-            <g class="lamp-glow"><path d="M288 20 C275 28 263 37 252 48 C242 58 233 70 224 82 C247 75 266 63 279 48 C286 39 290 29 288 20Z" fill="url(#lampLight)" filter="url(#lampDiffusion)"/></g>
+            <g class="lamp-glow"><ellipse cx="288.5" cy="27" rx="31" ry="25" fill="url(#lampLight)" filter="url(#lampDiffusion)"/></g>
             <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z" fill="${lamp ? "#ffad35" : "#687780"}" stroke="${lamp ? "#ffca75" : "#46565e"}" stroke-width="1.5"/>
             <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="${lamp ? "#fff0b1" : "#839097"}" opacity="${lamp ? "1" : ".45"}"/><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
             <g class="gate-leaf" transform="translate(${shift},0)">
@@ -120,7 +120,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <path d="M279 44 L355 101 L355 127 L279 127 Z" fill="#536a74" fill-opacity=".7" stroke="#344953" stroke-width="3"/><path d="M286 54 L344 101 M286 73 L324 101" stroke="#91a3ab" stroke-width="3" opacity=".75"/>
             </g>
             <!-- Napęd zachowuje oryginalne położenie i wymiary; jest tylko rysowany po skrzydle -->
-            <g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>
+            <g><rect x="303" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M308 114 H322 M308 119 H322" stroke="#84969d" stroke-width="1.5"/></g></g>
           </svg>
         </div>
         <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button><button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button></div>
