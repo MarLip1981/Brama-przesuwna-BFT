@@ -248,5 +248,15 @@ if (!window.customCards.some(card => card.type === "brama-przesuwna-bft-card")) 
     name: "Brama przesuwna BFT",
     description: "Karta sterowania bramą i furtką.",
     preview: false,
+    getEntitySuggestion: (hass, entityId) => {
+      const state = hass?.states?.[entityId];
+      const label = state?.attributes?.friendly_name || "";
+      const searchable = `${entityId} ${label}`;
+      const isGateEntity = Object.values(ROLES).some(role => role.test.test(searchable));
+      if (!isGateEntity) return null;
+      return {
+        config: { type: "custom:brama-przesuwna-bft-card" },
+      };
+    },
   });
 }
