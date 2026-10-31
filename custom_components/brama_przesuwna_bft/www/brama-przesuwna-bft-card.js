@@ -91,6 +91,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
         button.main{color:#429ee8}
         button.pedestrian{color:#39b982}
+        button ha-icon{--mdc-icon-size:28px;flex:0 0 auto}
+        button{display:flex;align-items:center;justify-content:center;gap:9px}
       </style>
       <ha-card>
         <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(statusLabel)}</div></div>
@@ -121,7 +123,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <g><rect x="290" y="108" width="24" height="19" rx="3" fill="#263943" stroke="#71858e" stroke-width="1.5"/><path d="M295 114 H309 M295 119 H309" stroke="#84969d" stroke-width="1.5"/></g>
           </svg>
         </div>
-        <div class="actions"><button class="main">${mainLabel}</button><button class="pedestrian">${pedestrianLabel}</button></div>
+        <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button><button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button></div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
