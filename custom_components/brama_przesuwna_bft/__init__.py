@@ -8,8 +8,8 @@ from functools import partial
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.setup import async_when_setup_or_start
 
 from .const import (
     DEFAULT_NOTIFY_TARGET,
@@ -24,15 +24,16 @@ from .frontend import async_setup_frontend
 _LOGGER = logging.getLogger(__name__)
 
 
-async def _async_frontend_after_start(hass: HomeAssistant, event: Event) -> None:
-    """Retry registration after Lovelace and frontend initialization."""
+async def _async_frontend_ready(hass: HomeAssistant, component: str) -> None:
+    """Register the card when Lovelace is loaded or Home Assistant starts."""
     await async_setup_frontend(hass)
 
 
 async def async_setup(hass: HomeAssistant, config: dict) -> bool:
-    """Register the dashboard card and retry after Home Assistant starts."""
-    await async_setup_frontend(hass)
-    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STARTED, _async_frontend_after_start)
+    """Register the dashboard card when Lovelace is actually ready."""
+    # Lovelace may be initialized after this integration. The helper handles
+    # both cases: Lovelace already loaded, or it loads later during startup.
+    async_when_setup_or_start(hass, "lovelace", _async_frontend_ready)
     return True
 
 
@@ -98,8 +99,7 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Set up entities, frontend card and configured notifications."""
-    await async_setup_frontend(hass)
+    """Set up entities and configured notifications."""
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(
         async_track_state_change_event(
