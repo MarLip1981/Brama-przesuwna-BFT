@@ -65,6 +65,12 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : 0;
     const status = this._state(statusId) || "Brak stanu";
     const moving = /otwieranie|zamykanie/i.test(status), open = /otwarta/i.test(status), closed = /zamknięta/i.test(status);
+    let statusLabel = status;
+    if (closed) statusLabel = "● Zamknięta";
+    else if (open) statusLabel = "● Otwarta";
+    else if (/otwieranie/i.test(status)) statusLabel = "● Otwieranie" + (valid ? " " + pos + "%" : "");
+    else if (/zamykanie/i.test(status)) statusLabel = "● Zamykanie" + (valid ? " " + pos + "%" : "");
+    else if (!status || ["unknown","unavailable","Brak stanu"].includes(status)) statusLabel = "Brak stanu";
     const direction = mode?.attributes?.opening_direction || "right";
     // Labels and actions follow the original YAML card state machine.
     const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
@@ -87,7 +93,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         button.pedestrian{color:#39b982}
       </style>
       <ha-card>
-        <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(moving && valid ? status + " " + pos + "%" : status)}</div></div>
+        <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(statusLabel)}</div></div>
         <div class="scene">
           <svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brama wjazdowa">
             <defs>
