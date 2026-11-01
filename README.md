@@ -175,6 +175,14 @@ Edytor karty automatycznie wyszukuje również encję fotokomórki. W razie potr
 
 Po dodaniu karty do dashboardu jej ustawienia i przypisania encji można ponownie edytować z poziomu konfiguratora.
 
+## Podgląd karty
+
+Poniżej znajduje się przykładowy wygląd karty w Home Assistant.
+
+<p align="center">
+  <img src="docs/brama-card-preview.webp" alt="Karta sterowania bramą przesuwną w Home Assistant — widok zamkniętej bramy z przyciskami sterowania" width="100%">
+</p>
+
 ## Obsługa karty
 
 Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch skrzydła jest przedstawiany płynnie na podstawie aktualizowanej pozycji procentowej. Konfiguracja kierunku w integracji określa również stronę, w którą skrzydło odsuwa się na rysunku — **lewo i prawo są obsługiwane jako dwa warianty tej samej sceny**.
