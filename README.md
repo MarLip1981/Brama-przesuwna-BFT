@@ -12,7 +12,7 @@
 
 Projekt tworzy kompletny system integracji bramy przesuwnej z **Home Assistant**: od sterownika opartego na ESP32 i firmware ESPHome, przez natywną integrację z konfiguracją graficzną, aż po autorską, animowaną kartę Lovelace. Umożliwia sterowanie bramą i funkcją furtki, prezentację stanu oraz szacowanej pozycji skrzydła, wizualizację fotokomórki, konfigurację kierunku ruchu, sygnalizacji świetlnej i powiadomień.
 
-Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz sterownik **ESP32 Relay X4 (AC/DC)**. Architektura i logika projektu mogą posłużyć również do integracji innych bram przesuwnych. W takim przypadku należy samodzielnie przeanalizować dokumentację konkretnego napędu, zidentyfikować jego wejścia i wyjścia, sprawdzić rodzaj oraz poziomy napięć sygnałów, a następnie opracować i zweryfikować bezpieczny schemat połączeń. Schemat BFT przedstawiony w tym repozytorium nie jest uniwersalnym pinoutem dla innych central.
+Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz sterownik **ESP32 Relay X4 (AC/DC)**. Zasady adaptacji do innych napędów i ograniczenia kompatybilności opisano w osobnej sekcji.
 
 ## Co zawiera projekt
 
@@ -28,7 +28,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 
 ### Integracja Home Assistant
 - Wykrywanie sterownika ESPHome na podstawie identyfikatora projektu firmware.
-- Konfiguracja i korekta przypisanych encji bez edytowania `configuration.yaml`.
+- Graficzna konfiguracja urządzenia i przypisanych encji.
 - Ustawienie kierunku przesuwania bramy — w lewo lub w prawo, patrząc od strony posesji.
 - Włączanie lub wyłączanie przycisku furtki.
 - Globalne ustawienie trybu lampki na karcie.
@@ -159,7 +159,7 @@ Powiadomienie jest wysyłane po utrzymaniu końcowego stanu przez 2 sekundy. Sta
 
 ### 5. Dodaj kartę do dashboardu
 
-Integracja rejestruje zasób JavaScript karty w Home Assistant i udostępnia kartę w natywnym pickerze Lovelace. Karta działa jako samodzielny komponent i nie korzysta z `custom:button-card`.
+Integracja rejestruje zasób JavaScript karty w Home Assistant i udostępnia ją w natywnym pickerze Lovelace.
 
 1. Otwórz dashboard Home Assistant i przejdź do edycji.
 2. Wybierz **Dodaj kartę**.
@@ -192,20 +192,10 @@ Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch 
 - Przytrzymanie nagłówka otwiera szczegóły encji pozycji.
 - Główny przycisk służy do sterowania bramą; opis przycisku zmienia się zależnie od stanu.
 - Przycisk furtki pojawia się tylko wtedy, gdy tryb furtki jest włączony i przypisana jest odpowiednia encja.
-- Skrzydło jest animowane na podstawie odczytywanej pozycji procentowej. Karta uwzględnia kierunek przesuwania zapisany w ustawieniach integracji: dla ruchu w lewo scena jest lustrzanym odbiciem wariantu prawego, dzięki czemu kierunek animacji odpowiada rzeczywistej konfiguracji montażu.
 - Gdy fotokomórka wykryje przeszkodę (stan encji `on`), na środku rysunku między słupkami pojawia się żółty trójkąt z wykrzyknikiem. Po ustąpieniu przeszkody znak znika.
 
 **Ważne:** karta prezentuje stan przekazywany przez Home Assistant. Nie zastępuje fabrycznych zabezpieczeń napędu ani fizycznej fotokomórki.
 
-## Szczegóły animacji i wizualizacji
-
-- **Ruch skrzydła:** pozycja skrzydła na rysunku wynika z sensora procentowego; zmiany są animowane płynnym przejściem.
-- **Kierunek lewo/prawo:** integracja udostępnia parametr kierunku otwierania. Karta odczytuje go automatycznie i lustrzanie odbija scenę dla przeciwnego wariantu, dzięki czemu animacja odpowiada sposobowi montażu bramy.
-- **Napęd:** na ilustracji znajduje się stylizowana wizualizacja napędu BFT.
-- **Lampka:** efekt świetlny jest prezentowany niezależnie od fizycznego wyjścia lampy. Dostępne tryby to automatyczny, zawsze migający i bez migania; ustawienie może być globalne lub nadpisane dla pojedynczej karty.
-- **Fotokomórka:** wykryta przeszkoda powoduje wyświetlenie znaku ostrzegawczego na scenie. Znak znika po ustąpieniu sygnału przeszkody.
-
-Wizualizacja odzwierciedla dane udostępniane przez sterownik. Pozycja jest estymowana czasowo, dlatego płynność animacji nie oznacza pomiaru położenia z enkodera.
 
 ## Funkcje firmware i encje ESPHome
 
@@ -242,13 +232,13 @@ Poniższe przypisania dotyczą płytki ESP32 Relay X4 (AC/DC) i napędu BFT DEIM
 
 ### Sterowanie przekaźnikami
 
-| ESP32 Relay X4 | GPIO | Zacisk napędu BFT | Funkcja |
-|---|---:|---:|---|
-| Przekaźnik 1 — COM | 32 | 60 | Wspólny styk sterowania |
-| Przekaźnik 1 — NO | 32 | 61 | Impuls sterujący bramą |
-| Przekaźnik 2 — COM | 33 | 60 | Wspólny styk drugiego wejścia |
-| Przekaźnik 2 — NO | 33 | 62 | Impuls funkcji furtki / częściowego otwarcia |
-| Przekaźniki 3 i 4 | 25 / 26 | — | Rezerwa |
+| Kanał przekaźnika | GPIO sterujące | Styk COM → BFT | Styk NO → BFT | Funkcja |
+|---|---:|---:|---:|---|
+| Przekaźnik 1 | GPIO32 | 60 | 61 | Impuls sterujący bramą |
+| Przekaźnik 2 | GPIO33 | 60 | 62 | Impuls funkcji furtki / częściowego otwarcia |
+| Przekaźniki 3 i 4 | GPIO25 / GPIO26 | — | — | Rezerwa |
+
+GPIO steruje przekaźnikiem na płytce ESP32 Relay X4. Do centrali BFT podłączane są bezpotencjałowe styki COM i NO przekaźnika, a nie samo GPIO.
 
 Przekaźniki 1 i 2 działają jako styki bezpotencjałowe. Firmware generuje impuls o długości 500 ms. Nie doprowadzaj napięcia zasilającego ESP32 do zacisków sterujących napędu.
 
