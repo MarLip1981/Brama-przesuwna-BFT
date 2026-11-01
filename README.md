@@ -175,18 +175,18 @@ Integracja udostępnia kartę w pickerze, ale nie dodaje jej samodzielnie do ist
 
 Firmware udostępnia między innymi:
 
-| Funkcja | Nazwa encji (domyślna) |
-|---|---|
-| Stan bramy | `sensor.brama_wjazdowa_dokladny_stan_bramy` |
-| Pozycja bramy | `sensor.brama_wjazdowa_pozycja_bramy` |
-| Sterowanie bramą | `button.brama_wjazdowa_otworz_zamknij_brame` |
-| Sterowanie furtką | `button.brama_wjazdowa_otworz_jako_furtke` |
-| Kalibracja czasu | `button.brama_wjazdowa_kalibruj_czas_zamykania` |
-| Fotokomórka | `binary_sensor.brama_wjazdowa_fotokomorka_przeszkoda` |
-| Czas przejazdu | `number.brama_wjazdowa_czas_przejazdu_bramy` |
-| Restart sterownika | `button.brama_wjazdowa_restart_esp32_brama_wjazdowa` |
-| Połączenie ESPHome | `binary_sensor.brama_wjazdowa_status_polaczenia_bramy` |
-| Sygnał Wi-Fi | `sensor.brama_wjazdowa_sygnal_wifi_bramy` |
+| Funkcja | Nazwa encji w ESPHome | Domena |
+|---|---|---|
+| Stan bramy | Dokładny stan bramy | `text_sensor` → `sensor` w HA |
+| Pozycja bramy | Pozycja bramy | `sensor` |
+| Sterowanie bramą | Otwórz / Zamknij bramę | `button` |
+| Sterowanie furtką | Otwórz jako furtkę | `button` |
+| Kalibracja czasu | Kalibruj czas zamykania | `button` |
+| Fotokomórka | Fotokomórka — przeszkoda | `binary_sensor` |
+| Czas przejazdu | Czas przejazdu bramy | `number` |
+| Restart sterownika | Restart ESP32 — brama wjazdowa | `button` |
+| Połączenie ESPHome | Status połączenia bramy | `binary_sensor` |
+| Sygnał Wi-Fi | Sygnał WiFi bramy | `sensor` |
 
 Home Assistant może nadać encjom inne identyfikatory, jeśli wcześniej zmieniono ich nazwy. W takim przypadku korzystaj z encji widocznych w swoim systemie i popraw przypisania w edytorze karty.
 
