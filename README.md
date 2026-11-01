@@ -10,9 +10,9 @@
 
 </div>
 
-Projekt umożliwia sterowanie bramą przesuwną BFT z poziomu Home Assistant za pomocą sterownika **ESP32 Relay X4 (AC/DC)**. Repozytorium zawiera firmware ESPHome, niestandardową integrację Home Assistant, automatycznie rejestrowaną kartę Lovelace oraz instrukcję uruchomienia.
+Projekt tworzy kompletny system integracji bramy przesuwnej z **Home Assistant**: od sterownika opartego na ESP32 i firmware ESPHome, przez natywną integrację z konfiguracją graficzną, aż po autorską, animowaną kartę Lovelace. Umożliwia sterowanie bramą i funkcją furtki, prezentację stanu oraz szacowanej pozycji skrzydła, wizualizację fotokomórki, konfigurację kierunku ruchu, sygnalizacji świetlnej i powiadomień.
 
-Projekt referencyjny został przygotowany dla napędu **BFT DEIMOS ULTRA BT B 600**. Nie zakładaj zgodności z innymi napędami lub płytkami bez sprawdzenia elektryki i logiki wejść.
+Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz sterownik **ESP32 Relay X4 (AC/DC)**. Architektura i logika projektu mogą posłużyć również do integracji innych bram przesuwnych. W takim przypadku należy samodzielnie przeanalizować dokumentację konkretnego napędu, zidentyfikować jego wejścia i wyjścia, sprawdzić rodzaj oraz poziomy napięć sygnałów, a następnie opracować i zweryfikować bezpieczny schemat połączeń. Schemat BFT przedstawiony w tym repozytorium nie jest uniwersalnym pinoutem dla innych central.
 
 ## Co zawiera projekt
 
@@ -36,14 +36,30 @@ Projekt referencyjny został przygotowany dla napędu **BFT DEIMOS ULTRA BT B 60
 - Automatyczna rejestracja karty Lovelace i udostępnienie jej w wyborze kart.
 
 ### Karta Lovelace
-- Rysunek bramy z animacją przesuwania skrzydła i wizualizacją napędu.
+- Szczegółowa, animowana wizualizacja bramy, skrzydła, słupków, napędu i lampki sygnalizacyjnej.
+- Animacja ruchu skrzydła zsynchronizowana z procentową pozycją przekazywaną przez ESPHome.
+- Obsługa obu kierunków przesuwu: w lewo i w prawo. Kierunek jest pobierany z konfiguracji integracji, a karta odpowiednio odwraca całą scenę i animację, zachowując prawidłową orientację wizualizacji.
 - Status bramy oraz szacowana pozycja.
 - Sterowanie bramą i — opcjonalnie — furtką.
-- Kierunek ruchu ustawiany w integracji.
+- Kierunek ruchu i orientacja animacji zgodne z ustawieniem integracji.
 - Lampka z trzema trybami efektu: automatyczny, zawsze migający lub bez migania.
 - Żółty znak ostrzegawczy na rysunku, widoczny wyłącznie wtedy, gdy fotokomórka zgłasza przeszkodę.
 - Automatyczne wykrywanie sterownika i encji w edytorze karty, z możliwością ręcznej korekty.
 - Możliwość nadpisania trybu lampki tylko dla konkretnej karty.
+
+## Kompatybilność i możliwość adaptacji
+
+Projekt został opracowany i zweryfikowany w konfiguracji referencyjnej z napędem **BFT DEIMOS ULTRA BT B 600** oraz sterownikiem **ESP32 Relay X4 (AC/DC)**. Można wykorzystać go jako bazę do integracji innych bram przesuwnych, o ile centrala napędu udostępnia odpowiednie wejścia sterujące i sygnały stanu, a zastosowany sterownik ESP32 można bezpiecznie dopasować do tych obwodów.
+
+Przy adaptacji do innego modelu bramy należy samodzielnie:
+- przeanalizować schemat elektryczny i instrukcję konkretnej centrali;
+- ustalić funkcje zacisków sterujących, wyjść statusowych i fotokomórki;
+- zweryfikować napięcia, polaryzację, typ wyjść oraz dopuszczalne obciążenia;
+- dobrać odpowiednie przekaźniki, separację galwaniczną i układy wejściowe;
+- dostosować firmware ESPHome oraz przypisanie encji do rzeczywistego okablowania;
+- wykonać testy działania i zabezpieczeń przed normalnym użytkowaniem.
+
+**Nie należy kopiować połączeń z tabeli BFT do innej centrali bez niezależnej weryfikacji.** Różnice między modelami, wersjami płyt sterujących i konfiguracją zacisków mogą być istotne. Wszelkie prace elektryczne wykonuj zgodnie z dokumentacją producenta i zasadami bezpieczeństwa.
 
 ## Wymagany sprzęt i oprogramowanie
 
@@ -58,7 +74,7 @@ Projekt referencyjny został przygotowany dla napędu **BFT DEIMOS ULTRA BT B 60
 - ESPHome Device Builder / dodatek ESPHome — do kompilowania i wgrywania firmware.
 - HACS — do instalacji integracji Brama przesuwna BFT.
 
-Integracja HACS i firmware ESPHome to dwa osobne elementy. Integracja nie wgrywa firmware na ESP32.
+Firmware ESPHome i integracja Home Assistant pełnią odrębne role: firmware obsługuje wejścia/wyjścia sterownika, a integracja wykrywa urządzenie, udostępnia jego funkcje i konfiguruje kartę.
 
 ## Uruchomienie — od zera
 
@@ -91,7 +107,7 @@ Firmware identyfikuje projekt jako `MarLip1981.BramaPrzesuwnaBFT`. Ten znacznik 
 
 ### 2. Zainstaluj integrację przez HACS
 
-Repozytorium jest przeznaczone do instalacji jako własne repozytorium HACS. Nie jest zgłaszane do oficjalnego katalogu HACS.
+Repozytorium dodaje się w HACS jako niestandardowe źródło integracji.
 
 1. Otwórz **HACS → ⋮ → Repozytoria niestandardowe**.
 2. Wklej adres:
@@ -143,7 +159,7 @@ Powiadomienie jest wysyłane po utrzymaniu końcowego stanu przez 2 sekundy. Sta
 
 ### 5. Dodaj kartę do dashboardu
 
-Integracja automatycznie rejestruje zasób JavaScript karty. Nie trzeba ręcznie dodawać zasobu Lovelace ani instalować `custom:button-card`.
+Integracja rejestruje zasób JavaScript karty w Home Assistant i udostępnia kartę w natywnym pickerze Lovelace. Karta działa jako samodzielny komponent i nie korzysta z `custom:button-card`.
 
 1. Otwórz dashboard Home Assistant i przejdź do edycji.
 2. Wybierz **Dodaj kartę**.
@@ -155,21 +171,33 @@ Integracja automatycznie rejestruje zasób JavaScript karty. Nie trzeba ręcznie
    - albo wybierz jeden z trzech trybów tylko dla tej karty.
 7. Zapisz kartę.
 
-Edytor karty automatycznie wyszukuje również encję fotokomórki. Jeżeli zostanie wykryta niewłaściwa encja, można poprawić przypisanie w edytorze. Nie trzeba ręcznie wpisywać identyfikatorów encji, jeśli automatyczne wykrywanie działa prawidłowo.
+Edytor karty automatycznie wyszukuje również encję fotokomórki. W razie potrzeby przypisanie każdej roli można skorygować ręcznie, wybierając encję z listy.
 
-Integracja udostępnia kartę w pickerze, ale nie dodaje jej samodzielnie do istniejącego dashboardu.
+Po dodaniu karty do dashboardu jej ustawienia i przypisania encji można ponownie edytować z poziomu konfiguratora.
 
 ## Obsługa karty
+
+Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch skrzydła jest przedstawiany płynnie na podstawie aktualizowanej pozycji procentowej. Konfiguracja kierunku w integracji określa również stronę, w którą skrzydło odsuwa się na rysunku — **lewo i prawo są obsługiwane jako dwa warianty tej samej sceny**.
 
 - Nagłówek pokazuje aktualny status bramy.
 - Krótkie kliknięcie nagłówka otwiera szczegóły encji stanu bramy.
 - Przytrzymanie nagłówka otwiera szczegóły encji pozycji.
 - Główny przycisk służy do sterowania bramą; opis przycisku zmienia się zależnie od stanu.
 - Przycisk furtki pojawia się tylko wtedy, gdy tryb furtki jest włączony i przypisana jest odpowiednia encja.
-- Skrzydło na rysunku przesuwa się zgodnie z odczytywaną pozycją i ustawionym kierunkiem.
+- Skrzydło jest animowane na podstawie odczytywanej pozycji procentowej. Karta uwzględnia kierunek przesuwania zapisany w ustawieniach integracji: dla ruchu w lewo scena jest lustrzanym odbiciem wariantu prawego, dzięki czemu kierunek animacji odpowiada rzeczywistej konfiguracji montażu.
 - Gdy fotokomórka wykryje przeszkodę (stan encji `on`), na środku rysunku między słupkami pojawia się żółty trójkąt z wykrzyknikiem. Po ustąpieniu przeszkody znak znika.
 
 **Ważne:** karta prezentuje stan przekazywany przez Home Assistant. Nie zastępuje fabrycznych zabezpieczeń napędu ani fizycznej fotokomórki.
+
+## Szczegóły animacji i wizualizacji
+
+- **Ruch skrzydła:** pozycja skrzydła na rysunku wynika z sensora procentowego; zmiany są animowane płynnym przejściem.
+- **Kierunek lewo/prawo:** integracja udostępnia parametr kierunku otwierania. Karta odczytuje go automatycznie i lustrzanie odbija scenę dla przeciwnego wariantu, dzięki czemu animacja odpowiada sposobowi montażu bramy.
+- **Napęd:** na ilustracji znajduje się stylizowana wizualizacja napędu BFT.
+- **Lampka:** efekt świetlny jest prezentowany niezależnie od fizycznego wyjścia lampy. Dostępne tryby to automatyczny, zawsze migający i bez migania; ustawienie może być globalne lub nadpisane dla pojedynczej karty.
+- **Fotokomórka:** wykryta przeszkoda powoduje wyświetlenie znaku ostrzegawczego na scenie. Znak znika po ustąpieniu sygnału przeszkody.
+
+Wizualizacja odzwierciedla dane udostępniane przez sterownik. Pozycja jest estymowana czasowo, dlatego płynność animacji nie oznacza pomiaru położenia z enkodera.
 
 ## Funkcje firmware i encje ESPHome
 
@@ -250,7 +278,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.13.7**.
+Aktualna wersja integracji i karty: **1.13.8**.
 
 ## Zgłaszanie problemów
 
