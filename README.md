@@ -244,12 +244,12 @@ Przekaźniki 1 i 2 działają jako styki bezpotencjałowe. Firmware generuje imp
 
 ### Odczyt stanu SCA
 
-| ESP32 Relay X4 | GPIO | Zacisk napędu BFT |
-|---|---:|---:|
-| GND | GND | 26 |
-| Wejście sygnałowe | 22 | 27 |
+| Połączenie | Zacisk napędu BFT | Funkcja |
+|---|---:|---|
+| GND sterownika ESP32 | 26 | Wspólny punkt odniesienia |
+| GPIO22 | 27 | Sygnał SCA |
 
-Wyjście AUX napędu musi być skonfigurowane jako bezpotencjałowy sygnał stanu bramy (SCA). Nie podłączaj do GPIO22 sygnału z napięciem.
+Wyjście AUX napędu musi być skonfigurowane jako bezpotencjałowy sygnał stanu bramy (SCA). Do GPIO22 nie wolno doprowadzać napięcia z wyjścia, które nie jest zgodne elektrycznie z wejściem ESP32.
 
 ### Fotokomórka
 
