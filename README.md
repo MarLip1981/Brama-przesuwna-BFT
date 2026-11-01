@@ -180,7 +180,7 @@ Po dodaniu karty do dashboardu jej ustawienia i przypisania encji można ponowni
 Poniżej znajduje się przykładowy wygląd karty w Home Assistant.
 
 <p align="center">
-  <img src="docs/brama-card-preview.webp" alt="Karta sterowania bramą przesuwną w Home Assistant — widok zamkniętej bramy z przyciskami sterowania" width="100%">
+  <img src="Screenshot_20261101_180959_Home%20Assistant.jpg" alt="Karta sterowania bramą przesuwną w Home Assistant — widok zamkniętej bramy z przyciskami sterowania" width="100%">
 </p>
 
 ## Obsługa karty
