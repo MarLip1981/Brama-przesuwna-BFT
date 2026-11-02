@@ -104,11 +104,6 @@ globals:
     restore_value: no
     initial_value: '0'
 
-  - id: oczekiwanie_otwarcia_sca_ms
-    type: unsigned long
-    restore_value: no
-    initial_value: '0'
-
   - id: poczatek_zamykania_ms
     type: unsigned long
     restore_value: no
@@ -310,31 +305,17 @@ interval:
 
             if (id(pozycja_bramy) >= 100.0f) {
               id(pozycja_bramy) = 100.0f;
+              id(kierunek_ruchu) = "idle";
 
-              // SCA can briefly chatter at the end of opening. Give the
-              // confirmation signal a short settling window instead of
-              // deciding from a single sample at exactly 100%.
               if (id(stan_aux_sca).state) {
-                id(kierunek_ruchu) = "idle";
-                id(oczekiwanie_otwarcia_sca_ms) = 0;
                 id(status_bramy).publish_state("Otwarta");
               } else {
-                if (id(oczekiwanie_otwarcia_sca_ms) == 0) {
-                  id(oczekiwanie_otwarcia_sca_ms) = now;
-                  id(status_bramy).publish_state(
-                    "Otwieranie 100% — oczekiwanie na SCA"
-                  );
-                } else if (now - id(oczekiwanie_otwarcia_sca_ms) >= 750) {
-                  id(kierunek_ruchu) = "idle";
-                  id(oczekiwanie_otwarcia_sca_ms) = 0;
-                  id(status_bramy).publish_state(
-                    "Brak potwierdzenia pełnego otwarcia"
-                  );
-                }
+                id(status_bramy).publish_state(
+                  "Brak potwierdzenia pełnego otwarcia"
+                );
               }
 
-              if (id(kalibracja_reczna) &&
-                  (id(kierunek_ruchu) == "idle")) {
+              if (id(kalibracja_reczna)) {
                 id(kierunek_ruchu) = "closing";
                 id(pozycja_start_zamykania) = id(pozycja_bramy);
                 id(poczatek_zamykania_ms) = now;
@@ -375,7 +356,7 @@ interval:
 
             const bool sca_stabilnie_off =
                 !id(stan_aux_sca).state &&
-                (now - id(ostatnia_zmiana_sca_ms)) >= 600;
+                (now - id(ostatnia_zmiana_sca_ms)) >= 1500;
 
             if (wystarczajacy_czas && sca_stabilnie_off) {
               const int zmierzony_czas =
