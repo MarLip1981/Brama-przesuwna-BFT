@@ -59,7 +59,7 @@ async def _async_gate_state_changed(hass: HomeAssistant, entry: ConfigEntry, eve
     if not enabled:
         return
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(0.5)
     current_state = hass.states.get(status_entity)
     if current_state is None or current_state.state != state:
         return
