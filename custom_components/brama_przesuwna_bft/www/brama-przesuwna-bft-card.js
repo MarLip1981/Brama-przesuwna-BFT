@@ -90,6 +90,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const shift = 1.9 * pos, lamp = moving || open;
     const lampBlink = moving && (lampMode === "always_blink" ||
       (lampMode !== "no_blink" && closing));
+    // The card is re-rendered on Home Assistant state updates. Keep the
+    // beacon's 1-second blink cycle aligned to a stable clock phase.
+    const lampBlinkPhase = (Date.now() % 1000) / 1000;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
     this.shadowRoot.innerHTML = `
       <style>
@@ -127,7 +130,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
             <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z"
                   fill="#596a70" stroke="#46565e" stroke-width="1.5"/>
-            <g class="beacon-emission ${lampBlink ? "beacon-blink" : ""}" style="opacity:${lamp ? "1" : "0"}">
+            <g class="beacon-emission ${lampBlink ? "beacon-blink" : ""}" style="opacity:${lamp ? "1" : "0"};animation-delay:${lampBlink ? "-" + lampBlinkPhase.toFixed(3) + "s" : "0s"}">
               <ellipse cx="288.5" cy="27" rx="31" ry="25" fill="url(#lampLight)" filter="url(#lampDiffusion)"/>
               <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="#fff0b1"/>
             </g><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
