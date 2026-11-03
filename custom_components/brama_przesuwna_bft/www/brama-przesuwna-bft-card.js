@@ -94,6 +94,25 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     // beacon's 1-second blink cycle aligned to a stable clock phase.
     const lampBlinkPhase = (Date.now() % 1000) / 1000;
     const statusClass = moving ? "moving" : open ? "open" : closed ? "closed" : "";
+    if (this.shadowRoot.querySelector(".head")) {
+      const statusNode = this.shadowRoot.querySelector(".status");
+      statusNode.textContent = statusLabel;
+      statusNode.className = "status " + statusClass;
+      this.shadowRoot.querySelector(".gate-leaf").setAttribute("transform", "translate(" + shift + ",0)");
+      const beacon = this.shadowRoot.querySelector(".beacon-emission");
+      beacon.style.opacity = lamp ? "1" : "0";
+      beacon.classList.toggle("beacon-blink", lampBlink);
+      this.shadowRoot.querySelector(".main span").textContent = mainLabel;
+      const actions = this.shadowRoot.querySelector(".actions");
+      actions.style.gridTemplateColumns = pedestrianEnabled ? "1fr 1fr" : "1fr";
+      const pedestrian = actions.querySelector(".pedestrian");
+      if (pedestrian) pedestrian.style.display = pedestrianEnabled ? "flex" : "none";
+      const pLabel = actions.querySelector(".pedestrian span");
+      if (pLabel) pLabel.textContent = pedestrianLabel;
+      const warning = this.shadowRoot.querySelector(".photocell-warning");
+      if (warning) warning.style.display = photocellDanger ? "" : "none";
+      return;
+    }
     this.shadowRoot.innerHTML = `
       <style>
         :host{display:block;color:var(--primary-text-color)}
@@ -155,7 +174,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <circle cx="23.2" cy="26.8" r="1.45" fill="#c5cbd0" stroke="#5b6268" stroke-width=".45"/>
               <path d="M6 32 H29" stroke="#64717b" stroke-width="1"/>
             </g>
-            ${photocellDanger ? `<g class="photocell-warning" transform="translate(174.5 79)" aria-label="Fotokomórka wykryła przeszkodę"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>` : ""}
+            <g class="photocell-warning" transform="translate(174.5 79)" aria-label="Fotokomórka wykryła przeszkodę" style="display:${photocellDanger ? "inline" : "none"}"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>
             </g>
           </svg>
         </div>
@@ -166,10 +185,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
-    this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(mainButton));
+    this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(this._entity("main_button")));
     if (pedestrianEnabled) {
       this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
-        this._press(open ? mainButton : pedestrianButton));
+        this._press(/otwarta/i.test(this._state(this._entity("status")) || "") ? this._entity("main_button") : this._entity("pedestrian_button")));
     }
   }
   static getConfigElement() { return document.createElement("brama-przesuwna-bft-card-editor"); }
