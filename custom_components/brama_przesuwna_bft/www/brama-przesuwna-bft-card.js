@@ -120,7 +120,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <defs>
               <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#607984" stop-opacity=".08"/><stop offset="100%" stop-color="#182b35" stop-opacity=".25"/></linearGradient>
               <linearGradient id="gateFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#465b65"/><stop offset="50%" stop-color="#80949d"/><stop offset="100%" stop-color="#465b65"/></linearGradient>
-              <radialGradient id="lampLight"><stop offset="0%" stop-color="#ffe3a0" stop-opacity=".34"/><stop offset="48%" stop-color="#ffc15e" stop-opacity=".17"/><stop offset="100%" stop-color="#ffad35" stop-opacity="0"/></radialGradient>
+              <radialGradient id="lampOuterGlow"><stop offset="0%" stop-color="#ffd77a" stop-opacity=".30"/><stop offset="42%" stop-color="#ffbd4d" stop-opacity=".20"/><stop offset="100%" stop-color="#ff9f24" stop-opacity="0"/></radialGradient><radialGradient id="lampLight"><stop offset="0%" stop-color="#ffe3a0" stop-opacity=".34"/><stop offset="48%" stop-color="#ffc15e" stop-opacity=".17"/><stop offset="100%" stop-color="#ffad35" stop-opacity="0"/></radialGradient>
               <filter id="lampDiffusion" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
             </defs>
             <g transform="${direction === "left" ? "translate(400 0) scale(-1 1)" : ""}"><rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/>
@@ -131,12 +131,12 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z"
                   fill="#596a70" stroke="#46565e" stroke-width="1.5"/>
             <g class="beacon-emission ${lampBlink ? "beacon-blink" : ""}" style="opacity:${lamp ? "1" : "0"};animation-delay:${lampBlink ? "-" + lampBlinkPhase.toFixed(3) + "s" : "0s"}">
-              <ellipse cx="288.5" cy="27" rx="31" ry="25" fill="url(#lampLight)" filter="url(#lampDiffusion)"/>
+              <ellipse cx="288.5" cy="27" rx="49" ry="39" fill="url(#lampOuterGlow)" filter="url(#lampDiffusion)"/><ellipse cx="288.5" cy="27" rx="31" ry="25" fill="url(#lampLight)" filter="url(#lampDiffusion)"/>
               <path d="M284 23 V17 Q288.5 12 293 17 V23 Z" fill="#fff0b1"/>
             </g><rect x="280" y="29" width="17" height="4" rx="1" fill="#637983"/>
             <g class="gate-leaf" transform="translate(${shift},0)">
               <rect x="51" y="44" width="228" height="83" fill="url(#gateFill)" stroke="#344953" stroke-width="2"/>
-              <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#8fa2aa" stroke-width="9" stroke-linecap="round"/>
+              <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#8fa2aa" stroke-width="9" stroke-linecap="butt"/>
               <path d="M57 49V113 M71.5 49V113 M86 49V113 M100.5 49V113 M115 49V113 M129.5 49V113 M144 49V113 M158.5 49V113 M173 49V113 M187.5 49V113 M202 49V113 M216.5 49V113 M231 49V113 M245.5 49V113 M260 49V113 M274.5 49V113" stroke="#425760" stroke-width="1.4" fill="none"/>
               <rect x="51" y="114" width="228" height="6" fill="#344953"/><rect x="51" y="122" width="228" height="5" fill="#526872"/>
               <path d="M279 44 L355 101 L355 127 L279 127 Z" fill="#536a74" fill-opacity=".7" stroke="#344953" stroke-width="3"/><path d="M286 54 L344 101 M286 73 L324 101" stroke="#91a3ab" stroke-width="3" opacity=".75"/>
