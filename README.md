@@ -227,7 +227,7 @@ Sensory zdarzeń fizycznych przycisków:
 - `sensor.brama_wjazdowa_ostatnie_nacisniecie_przycisku_bramy` — ostatnie zdarzenie przycisku bramy.
 - `sensor.brama_wjazdowa_ostatnie_nacisniecie_przycisku_furtki` — ostatnie zdarzenie przycisku furtki.
 - Wartość **„Krótkie naciśnięcie”** oznacza, że po puszczeniu przycisku firmware wykonał standardowy impuls odpowiednio P1 (brama) lub P2 (furtka).
-- Wartość **„Długie przytrzymanie”** oznacza przytrzymanie przez co najmniej 1,5 s i przełączenie odpowiednio P3 (blokada zamknięcia) lub P4 (własny). Długie przytrzymanie nie powinno wywołać impulsu P1/P2.
+- Wartość **„Długie przytrzymanie”** oznacza przytrzymanie przez co najmniej 1,5 s i przełączenie odpowiednio P3 (blokada zamknięcia) lub P4 (oświetlenie). Długie przytrzymanie nie powinno wywołać impulsu P1/P2.
 - Sensor przechowuje ostatnio rozpoznane zdarzenie — nie jest licznikiem naciśnięć ani bieżącym stanem przycisku.
 
 **Uwaga dotycząca wersji:** obsługa tych zdarzeń i wejść fizycznych jest przygotowana w firmware 1.1.1. Plik `esphome/brama-wjazdowa.yaml` w gałęzi `main` nadal ma wersję 1.0.0; aktualizacja firmware do repozytorium nastąpi dopiero po walidacji i potwierdzeniu działania na sterowniku.
@@ -266,7 +266,7 @@ Przekaźniki 1 i 2 działają jako styki bezpotencjałowe. Firmware generuje imp
 | Funkcja | GPIO ESP32 | Działanie |
 |---|---:|---|
 | Przycisk bramy | GPIO18 | Krótko: impuls P1; długo (1,5 s): przełączenie P3 — blokada zamknięcia |
-| Przycisk furtki | GPIO17 | Krótko: impuls P2; długo (1,5 s): przełączenie P4 — własny |
+| Przycisk furtki | GPIO17 | Krótko: impuls P2; długo (1,5 s): przełączenie P4 — oświetlenie |
 
 Wejścia przycisków są przeznaczone do pracy jako styki zwierające GPIO do GND z podciąganiem `INPUT_PULLUP`. Nie doprowadzaj do nich napięcia z centrali BFT. GPIO17 i GPIO18 są przypisaniami projektowymi, które należy potwierdzić na konkretnej wersji płytki ESP32 Relay X4 przed lutowaniem przewodów. Przycisk furtki zachowuje równoległe, bezpośrednie połączenie z centralą BFT jako niezależną drogę awaryjną; piloty również pozostają podłączone bezpośrednio do centrali.
 
