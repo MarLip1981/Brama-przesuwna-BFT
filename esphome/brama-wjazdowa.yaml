@@ -166,13 +166,13 @@ switch:
 
   - platform: gpio
     id: switch_gpio_3
-    name: "Relay 3"
+    name: "Blokada zamknięcia"
     pin: 25
     restore_mode: ALWAYS_OFF
 
   - platform: gpio
     id: switch_gpio_4
-    name: "Relay 4"
+    name: "Własny"
     pin: 26
     restore_mode: ALWAYS_OFF
 
