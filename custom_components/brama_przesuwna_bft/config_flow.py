@@ -25,12 +25,16 @@ ROLE_DOMAINS = {
     "position": ["sensor"],
     "main_button": ["button"],
     "pedestrian_button": ["button"],
+    "gate_button_event": ["sensor"],
+    "wicket_button_event": ["sensor"],
 }
 ROLE_LABELS = {
     "status": "Stan bramy",
     "position": "Pozycja bramy",
     "main_button": "Sterowanie bramą",
     "pedestrian_button": "Sterowanie furtką",
+    "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
+    "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki",
 }
 
 
