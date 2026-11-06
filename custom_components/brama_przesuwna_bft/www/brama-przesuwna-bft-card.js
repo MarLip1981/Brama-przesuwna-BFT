@@ -250,10 +250,6 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       if (warning) warning.style.display = (photocellDanger || manualLockActive) ? "inline" : "none";
       const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
       if (manualLabel) manualLabel.style.display = manualLockActive ? "inline" : "none";
-      const gateEventNode = this.shadowRoot.querySelector(".gate-button-event");
-      const wicketEventNode = this.shadowRoot.querySelector(".wicket-button-event");
-      if (gateEventNode) gateEventNode.textContent = "Przycisk bramy: " + eventLabel(gateButtonEvent);
-      if (wicketEventNode) wicketEventNode.textContent = "Przycisk furtki: " + eventLabel(wicketButtonEvent);
       const warningLabel = this.shadowRoot.querySelector(".photocell-warning");
       if (warningLabel) warningLabel.setAttribute("aria-label", manualLockActive ? "Ręczna blokada zamknięcia" : "Fotokomórka wykryła przeszkodę");
       return;
@@ -266,8 +262,6 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .manual-lock-label{fill:#ff4545;font-size:8px;font-weight:900;letter-spacing:.35px;text-anchor:middle;paint-order:stroke;stroke:rgba(20,20,20,.85);stroke-width:1.8px;stroke-linejoin:round;animation:manualLockPulse 1.5s ease-in-out infinite}
-        .button-events{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 3px 2px;color:var(--secondary-text-color);font-size:11px;text-align:center}
-        .button-events span{padding:5px 3px;border-radius:8px;background:var(--secondary-background-color)}
         @keyframes manualLockPulse{0%,100%{opacity:1;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35)}50%{opacity:.62;text-shadow:0 0 2px rgba(255,35,35,.35)}}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
@@ -331,10 +325,6 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             <!-- Keep the P3 message in the foreground, centered directly below the warning triangle. -->
             <text class="manual-lock-label" x="174.5" y="111" style="display:${manualLockActive ? "inline" : "none"}">BLOKADA ZAMKNIĘCIA</text>
           </svg>
-        </div>
-        <div class="button-events" aria-live="polite">
-          <span class="gate-button-event">Przycisk bramy: ${esc(eventLabel(gateButtonEvent))}</span>
-          <span class="wicket-button-event">Przycisk furtki: ${esc(eventLabel(wicketButtonEvent))}</span>
         </div>
         <div class="actions" data-auxiliary-mode="${auxiliaryMode}"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${auxiliaryMarkup}</div>
       </ha-card>`;
@@ -466,7 +456,7 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
       </style>
       <p class="hint">${this._loading?"Wykrywanie sterownika i encji…":esc(this._deviceName)}</p>
       <div class="field"><button class="detect" ${this._loading?"disabled":""}>Wykryj sterownik ponownie</button></div>
-      ${Object.entries(ROLES).filter(([role]) => !["manual_lock","entrance_lighting"].includes(role)).map(([role,meta])=>`
+      ${Object.entries(ROLES).filter(([role]) => !["gate_button_event","wicket_button_event"].includes(role)).map(([role,meta])=>`
         <div class="field"><label>${meta.label}</label><select data-role="${role}">
           <option value="">— wybierz encję —</option>${options(role)}
         </select></div>`).join("")}
