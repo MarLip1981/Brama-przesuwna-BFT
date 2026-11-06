@@ -19,6 +19,7 @@
           "pedestrian_button": "Sterowanie furtką (opcjonalnie)",
           "gate_button_event": "Ostatnie naciśnięcie przycisku bramy (opcjonalnie)",
           "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki (opcjonalnie)",
+          "manual_lock": "Blokada zamknięcia — przekaźnik 3 (opcjonalnie)",
           "opening_direction": "Kierunek otwierania (patrząc od podwórka)"
         }
       }
@@ -77,7 +78,8 @@
           "main_button": "Sterowanie bramą",
           "pedestrian_button": "Sterowanie furtką",
           "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
-          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki"
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki",
+          "manual_lock": "Blokada zamknięcia — przekaźnik 3"
         }
       }
     },
