@@ -9,6 +9,20 @@
           "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
           "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
         }
+      },
+      "entities": {
+        "title": "Przypisanie encji bramy",
+        "description": "Sprawdź automatycznie wykryte encje sterownika {device}. Stan, pozycja i sterowanie bramą są wymagane. Przełączniki P3 i P4 są opcjonalne.",
+        "data": {
+          "status": "Stan bramy",
+          "position": "Pozycja bramy",
+          "main_button": "Sterowanie bramą",
+          "pedestrian_button": "Sterowanie furtką (opcjonalnie)",
+          "gate_button_event": "Ostatnie naciśnięcie przycisku bramy (opcjonalnie)",
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki (opcjonalnie)",
+          "manual_lock": "Blokada zamknięcia — przekaźnik P3 (opcjonalnie)",
+          "entrance_lighting": "Oświetlenie wjazdu — przekaźnik P4 (opcjonalnie)"
+        }
       }
     },
     "abort": {
