@@ -195,6 +195,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     // P4 is presented as driveway lighting only after explicit opt-in in the integration options.
     const lightingEnabled = mode?.attributes?.entrance_lighting_enabled === true && Boolean(entranceLightingId);
     const auxiliaryMode = pedestrianEnabled ? "pedestrian" : lightingEnabled ? "lighting" : "none";
+    // Rebind the wicket long-press handler when P4 lighting is enabled or disabled.
+    const actionConfigKey = auxiliaryMode + ":" + (lightingEnabled ? "light" : "no-light");
     const auxiliaryMarkup = pedestrianEnabled
       ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>`
       : lightingEnabled ? `<button class="lighting"><ha-icon icon="mdi:lightbulb"></ha-icon><span>Oświetlenie wjazdu: ${entranceLightingActive ? "WŁ." : "WYŁ."}</span></button>` : "";
@@ -223,9 +225,9 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       beacon.classList.toggle("beacon-blink", lampBlink);
       this.shadowRoot.querySelector(".main span").textContent = mainLabel;
       const actions = this.shadowRoot.querySelector(".actions");
-      if (actions.dataset.auxiliaryMode !== auxiliaryMode) {
+      if (actions.dataset.auxiliaryMode !== actionConfigKey) {
         actions.innerHTML = `<button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${auxiliaryMarkup}`;
-        actions.dataset.auxiliaryMode = auxiliaryMode;
+        actions.dataset.auxiliaryMode = actionConfigKey;
         this._bindActionButtons(pedestrianEnabled, lightingEnabled);
       }
       actions.style.gridTemplateColumns = auxiliaryMode === "none" ? "1fr" : "1fr 1fr";
