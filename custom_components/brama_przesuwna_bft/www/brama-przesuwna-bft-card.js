@@ -206,13 +206,13 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const auxiliaryMode = pedestrianEnabled ? "pedestrian" : lightingEnabled ? "lighting" : "none";
     // Rebind the wicket long-press handler when P4 lighting is enabled or disabled.
     const actionConfigKey = auxiliaryMode + ":" + (lightingEnabled ? "light" : "no-light");
-    const auxiliaryMarkup = pedestrianEnabled
-      ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>`
-      : lightingEnabled ? `<button class="lighting"><ha-icon icon="mdi:lightbulb"></ha-icon><span>Oświetlenie wjazdu: ${entranceLightingActive ? "WŁ." : "WYŁ."}</span></button>` : "";
     // Labels and actions follow the original YAML card state machine.
     const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
       closed ? "Brama - Otwórz" : "Brama - Steruj";
     const pedestrianLabel = open ? "Furtka - Zamknij" : "Furtka - Otwórz";
+    const auxiliaryMarkup = pedestrianEnabled
+      ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>`
+      : lightingEnabled ? `<button class="lighting"><ha-icon icon="mdi:lightbulb"></ha-icon><span>Oświetlenie wjazdu: ${entranceLightingActive ? "WŁ." : "WYŁ."}</span></button>` : "";
     const closing = /zamykanie/i.test(status);
     const configuredLampMode = this._config.lamp_mode || "integration";
     const lampMode = configuredLampMode === "integration"
