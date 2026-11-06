@@ -304,7 +304,9 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.14.2**.
+Aktualna wersja integracji i karty: **1.14.3**.
+
+Wersja 1.14.3 dodaje opcjonalne wykorzystanie przekaźnika P4 do oświetlenia wjazdu. Funkcję włącza się w ustawieniach integracji; karta pokazuje oświetlenie na słupkach i odpowiedni przycisk zależnie od tego, czy użytkownik korzysta z furtki.
 
 ## Zgłaszanie problemów
 
