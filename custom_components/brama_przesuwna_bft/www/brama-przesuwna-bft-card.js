@@ -38,6 +38,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       main_button: config.main_button || "",
       pedestrian_button: config.pedestrian_button || "",
       lamp_mode: config.lamp_mode || "integration",
+      // Card-level overrides; "integration" follows the integration settings.
+      pedestrian_mode: config.pedestrian_mode || "integration",
+      entrance_lighting: config.entrance_lighting || "integration",
+      opening_direction: config.opening_direction || "integration",
     };
     this._render();
   }
@@ -190,10 +194,15 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     else if (/otwieranie/i.test(status)) statusLabel = "● Otwieranie" + (valid ? " " + pos + "%" : "");
     else if (/zamykanie/i.test(status)) statusLabel = "● Zamykanie" + (valid ? " " + pos + "%" : "");
     else if (!status || ["unknown","unavailable","Brak stanu"].includes(status)) statusLabel = "Brak stanu";
-    const direction = mode?.attributes?.opening_direction || "right";
-    const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
-    // P4 is presented as driveway lighting only after explicit opt-in in the integration options.
-    const lightingEnabled = mode?.attributes?.entrance_lighting_enabled === true && Boolean(entranceLightingId);
+    const direction = this._config.opening_direction === "integration"
+      ? (mode?.attributes?.opening_direction || "right") : this._config.opening_direction;
+    // Card settings can override integration defaults; "integration" follows configured options.
+    const pedestrianSetting = this._config.pedestrian_mode || "integration";
+    const pedestrianEnabled = (pedestrianSetting === "integration"
+      ? mode?.state === "on" : pedestrianSetting === "on") && Boolean(pedestrianButton);
+    const lightingSetting = this._config.entrance_lighting || "integration";
+    const lightingEnabled = (lightingSetting === "integration"
+      ? mode?.attributes?.entrance_lighting_enabled === true : lightingSetting === "on") && Boolean(entranceLightingId);
     const auxiliaryMode = pedestrianEnabled ? "pedestrian" : lightingEnabled ? "lighting" : "none";
     // Rebind the wicket long-press handler when P4 lighting is enabled or disabled.
     const actionConfigKey = auxiliaryMode + ":" + (lightingEnabled ? "light" : "no-light");
@@ -240,7 +249,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       const warning = this.shadowRoot.querySelector(".photocell-warning");
       if (warning) warning.style.display = (photocellDanger || manualLockActive) ? "inline" : "none";
       const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
-      if (manualLabel) manualLabel.style.display = manualLockActive ? "block" : "none";
+      if (manualLabel) manualLabel.style.display = manualLockActive ? "inline" : "none";
       const gateEventNode = this.shadowRoot.querySelector(".gate-button-event");
       const wicketEventNode = this.shadowRoot.querySelector(".wicket-button-event");
       if (gateEventNode) gateEventNode.textContent = "Przycisk bramy: " + eventLabel(gateButtonEvent);
@@ -256,7 +265,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px}
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
-        .manual-lock-label{display:${manualLockActive ? "block" : "none"};margin:2px 4px 6px;text-align:center;color:#ff4545;font-size:13px;font-weight:900;letter-spacing:.055em;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35);animation:manualLockPulse 1.5s ease-in-out infinite}
+        .manual-lock-label{fill:#ff4545;font-size:8px;font-weight:900;letter-spacing:.35px;text-anchor:middle;paint-order:stroke;stroke:rgba(20,20,20,.85);stroke-width:1.8px;stroke-linejoin:round;animation:manualLockPulse 1.5s ease-in-out infinite}
         .button-events{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 3px 2px;color:var(--secondary-text-color);font-size:11px;text-align:center}
         .button-events span{padding:5px 3px;border-radius:8px;background:var(--secondary-background-color)}
         @keyframes manualLockPulse{0%,100%{opacity:1;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35)}50%{opacity:.62;text-shadow:0 0 2px rgba(255,35,35,.35)}}
@@ -319,9 +328,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
             </g>
             <g class="photocell-warning" transform="translate(174.5 79)" aria-label="${manualLockActive ? "Ręczna blokada zamknięcia" : "Fotokomórka wykryła przeszkodę"}" style="display:${photocellDanger || manualLockActive ? "inline" : "none"}"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>
             </g>
+            <!-- Keep the P3 message in the foreground, centered directly below the warning triangle. -->
+            <text class="manual-lock-label" x="174.5" y="111" style="display:${manualLockActive ? "inline" : "none"}">BLOKADA ZAMKNIĘCIA</text>
           </svg>
         </div>
-        <div class="manual-lock-label" role="status" style="display:${manualLockActive ? "block" : "none"}">RĘCZNA BLOKADA ZAMKNIĘCIA</div>
         <div class="button-events" aria-live="polite">
           <span class="gate-button-event">Przycisk bramy: ${esc(eventLabel(gateButtonEvent))}</span>
           <span class="wicket-button-event">Przycisk furtki: ${esc(eventLabel(wicketButtonEvent))}</span>
@@ -456,7 +466,7 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
       </style>
       <p class="hint">${this._loading?"Wykrywanie sterownika i encji…":esc(this._deviceName)}</p>
       <div class="field"><button class="detect" ${this._loading?"disabled":""}>Wykryj sterownik ponownie</button></div>
-      ${Object.entries(ROLES).map(([role,meta])=>`
+      ${Object.entries(ROLES).filter(([role]) => !["manual_lock","entrance_lighting"].includes(role)).map(([role,meta])=>`
         <div class="field"><label>${meta.label}</label><select data-role="${role}">
           <option value="">— wybierz encję —</option>${options(role)}
         </select></div>`).join("")}
@@ -468,6 +478,21 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
         <option value="always_blink" ${this._config.lamp_mode==="always_blink"?"selected":""}>Zawsze miga podczas ruchu bramy</option>
         <option value="no_blink" ${this._config.lamp_mode==="no_blink"?"selected":""}>Bez migania — świeci ciągle podczas ruchu</option>
       </select></div>
+      <div class="field"><label>Przycisk furtki</label><select class="pedestrian-mode">
+        <option value="integration" ${(!this._config.pedestrian_mode || this._config.pedestrian_mode==="integration")?"selected":""}>Użyj ustawienia integracji</option>
+        <option value="on" ${this._config.pedestrian_mode==="on"?"selected":""}>Pokaż na karcie</option>
+        <option value="off" ${this._config.pedestrian_mode==="off"?"selected":""}>Ukryj na karcie</option>
+      </select></div>
+      <div class="field"><label>Oświetlenie wjazdu (P4)</label><select class="lighting-mode">
+        <option value="integration" ${(!this._config.entrance_lighting || this._config.entrance_lighting==="integration")?"selected":""}>Użyj ustawienia integracji</option>
+        <option value="on" ${this._config.entrance_lighting==="on"?"selected":""}>Włącz obsługę na karcie</option>
+        <option value="off" ${this._config.entrance_lighting==="off"?"selected":""}>Wyłącz obsługę na karcie</option>
+      </select></div>
+      <div class="field"><label>Kierunek otwierania</label><select class="opening-direction">
+        <option value="integration" ${(!this._config.opening_direction || this._config.opening_direction==="integration")?"selected":""}>Użyj ustawienia integracji</option>
+        <option value="left" ${this._config.opening_direction==="left"?"selected":""}>W lewo</option>
+        <option value="right" ${this._config.opening_direction==="right"?"selected":""}>W prawo</option>
+      </select></div>
 `;
     this.shadowRoot.querySelector(".name")?.addEventListener("change", e => {
       this._config = {...this._config,name:e.target.value}; this._fire();
@@ -475,6 +500,12 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
     this.shadowRoot.querySelector(".lamp-mode")?.addEventListener("change", e => {
       this._config = {...this._config,lamp_mode:e.target.value}; this._fire(); this._render();
     });
+    // Per-card overrides; integration settings remain the default source.
+    for (const [selector, key] of [[".pedestrian-mode","pedestrian_mode"],[".lighting-mode","entrance_lighting"],[".opening-direction","opening_direction"]]) {
+      this.shadowRoot.querySelector(selector)?.addEventListener("change", e => {
+        this._config = {...this._config,[key]:e.target.value}; this._fire(); this._render();
+      });
+    }
     this.shadowRoot.querySelector(".detect")?.addEventListener("click", () => this._autoDetect());
     this.shadowRoot.querySelectorAll("select[data-role]").forEach(el =>
       el.addEventListener("change", e => this._set(e.target.dataset.role,e.target.value)));
