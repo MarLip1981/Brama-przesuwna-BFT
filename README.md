@@ -26,7 +26,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Możliwość zmiany czasu przejazdu i restartu sterownika z Home Assistant.
 - Obsługa dwóch fizycznych przycisków: krótkie naciśnięcie steruje odpowiednim wejściem BFT, a długie przytrzymanie przełącza przekaźnik P3 lub P4.
 - Rozpoznawanie długiego przytrzymania po 1,5 s; impuls sterujący jest wysyłany dopiero po puszczeniu przycisku, więc długie przytrzymanie nie wywołuje przypadkowego ruchu bramy.
-- Publikowanie ostatniego rozpoznanego rodzaju naciśnięcia obu przycisków do Home Assistant.
+- Publikowanie ostatniego rozpoznanego rodzaju naciśnięcia obu przycisków do Home Assistant. Sensory zdarzeń przyjmują wartości „Krótkie naciśnięcie” albo „Długie przytrzymanie”; aktualizują się po rozpoznaniu zdarzenia, a nie w trakcie trzymania przycisku.
 - Odczyt siły sygnału Wi-Fi.
 
 ### Integracja Home Assistant
@@ -221,7 +221,16 @@ Firmware udostępnia między innymi:
 | Połączenie ESPHome | Status połączenia bramy | `binary_sensor` |
 | Sygnał Wi-Fi | Sygnał WiFi bramy | `sensor` |
 | Ostatnie naciśnięcie przycisku bramy | Ostatnie naciśnięcie przycisku bramy | `sensor` |
-| Ostatnie naciśnięcie przycisku furtki | Ostatnie naciśnięcie przycisku furtki | `sensor` |
+| Ostatnie naciśnięcie przycisku furtki | Ostatnie naciśnięcie przycisku furtki | `text_sensor` → `sensor` w HA |
+
+Sensory zdarzeń fizycznych przycisków:
+- `sensor.brama_wjazdowa_ostatnie_nacisniecie_przycisku_bramy` — ostatnie zdarzenie przycisku bramy.
+- `sensor.brama_wjazdowa_ostatnie_nacisniecie_przycisku_furtki` — ostatnie zdarzenie przycisku furtki.
+- Wartość **„Krótkie naciśnięcie”** oznacza, że po puszczeniu przycisku firmware wykonał standardowy impuls odpowiednio P1 (brama) lub P2 (furtka).
+- Wartość **„Długie przytrzymanie”** oznacza przytrzymanie przez co najmniej 1,5 s i przełączenie odpowiednio P3 (blokada zamknięcia) lub P4 (własny). Długie przytrzymanie nie powinno wywołać impulsu P1/P2.
+- Sensor przechowuje ostatnio rozpoznane zdarzenie — nie jest licznikiem naciśnięć ani bieżącym stanem przycisku.
+
+**Uwaga dotycząca wersji:** obsługa tych zdarzeń i wejść fizycznych jest przygotowana w firmware 1.1.1. Plik `esphome/brama-wjazdowa.yaml` w gałęzi `main` nadal ma wersję 1.0.0; aktualizacja firmware do repozytorium nastąpi dopiero po walidacji i potwierdzeniu działania na sterowniku.
 
 Home Assistant może nadać encjom inne identyfikatory, jeśli wcześniej zmieniono ich nazwy. W takim przypadku korzystaj z encji widocznych w swoim systemie i popraw przypisania w edytorze karty.
 
