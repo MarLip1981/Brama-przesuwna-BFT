@@ -131,7 +131,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       const pLabel = actions.querySelector(".pedestrian span");
       if (pLabel) pLabel.textContent = pedestrianLabel;
       const warning = this.shadowRoot.querySelector(".photocell-warning");
-      if (warning) warning.style.display = photocellDanger ? "" : "none";
+      if (warning) warning.style.display = (photocellDanger || manualLockActive) ? "inline" : "none";
       const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
       if (manualLabel) manualLabel.style.display = manualLockActive ? "block" : "none";
       const warningLabel = this.shadowRoot.querySelector(".photocell-warning");
