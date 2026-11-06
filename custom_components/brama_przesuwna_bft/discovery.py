@@ -17,7 +17,7 @@ ROLE_HINTS = {
     "gate_button_event": ("ostatnie naciśnięcie przycisku bramy", "zdarzenie przycisku bramy"),
     "wicket_button_event": ("ostatnie naciśnięcie przycisku furtki", "zdarzenie przycisku furtki"),
     "manual_lock": ("blokada zamknięcia",),
-    "entrance_lighting": ("oświetlenie wjazdu", "oswietlenie wjazdu", "przekaźnik 4", "relay 4", "własny"),
+    "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4"),
 }
 
 
