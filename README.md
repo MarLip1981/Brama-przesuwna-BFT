@@ -44,7 +44,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Kierunek ruchu i orientacja animacji zgodne z ustawieniem integracji.
 - Lampka z trzema trybami efektu: automatyczny, zawsze migający lub bez migania.
 - Żółty znak ostrzegawczy na rysunku, widoczny wyłącznie wtedy, gdy fotokomórka zgłasza przeszkodę.
-- Ręczna blokada zamknięcia obsługiwana przez przekaźnik 3 ESPHome: przytrzymanie głównego przycisku karty przez 0,75 s przełącza blokadę; aktywny stan sygnalizuje osobny komunikat ostrzegawczy.
+- Ręczna blokada zamknięcia obsługiwana przez przekaźnik 3 ESPHome: przytrzymanie głównego przycisku karty przez 0,75 s przełącza blokadę. Aktywna blokada pokazuje trójkąt ostrzegawczy na grafice bramy oraz czerwony, pulsujący napis „RĘCZNA BLOKADA ZAMKNIĘCIA” pod grafiką. Krótkie kliknięcia nadal realizują standardową sekwencję sterowania centrali BFT.
 - Automatyczne wykrywanie sterownika i encji w edytorze karty, z możliwością ręcznej korekty.
 - Możliwość nadpisania trybu lampki tylko dla konkretnej karty.
 
@@ -193,7 +193,7 @@ Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch 
 - Przytrzymanie nagłówka otwiera szczegóły encji pozycji.
 - Krótkie kliknięcie głównego przycisku steruje bramą; opis przycisku zmienia się zależnie od stanu.
 - Przytrzymanie głównego przycisku przez 0,75 s przełącza ręczną blokadę zamknięcia (przekaźnik 3). Funkcja wymaga przypisanej encji przełącznika; karta wykrywa ją po nazwie „Blokada zamknięcia” lub pozwala wybrać ręcznie w edytorze.
-- Aktywna blokada wyświetla komunikat „Zablokowano ręcznie — zamykanie jest zablokowane”. Jest to osobny stan od rzeczywistej przeszkody fotokomórki.
+- Aktywna blokada wyświetla trójkąt ostrzegawczy na grafice i czerwony pulsujący napis pod grafiką. Jest to osobny stan od rzeczywistej przeszkody fotokomórki. Krótkie naciśnięcia głównego przycisku nie zmieniają działania standardowej sekwencji BFT; wyłącznie przytrzymanie przez 0,75 s przełącza przekaźnik 3.
 - Przycisk furtki pojawia się tylko wtedy, gdy tryb furtki jest włączony i przypisana jest odpowiednia encja.
 - Gdy fotokomórka wykryje przeszkodę (stan encji `on`), na środku rysunku między słupkami pojawia się żółty trójkąt z wykrzyknikiem. Po ustąpieniu przeszkody znak znika.
 
