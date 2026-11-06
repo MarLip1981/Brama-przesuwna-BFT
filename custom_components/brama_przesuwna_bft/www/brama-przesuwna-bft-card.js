@@ -261,7 +261,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px}
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
-        .manual-lock-label{fill:#ff4545;font-size:8px;font-weight:900;letter-spacing:.35px;text-anchor:middle;paint-order:stroke;stroke:rgba(20,20,20,.85);stroke-width:1.8px;stroke-linejoin:round;animation:manualLockPulse 1.5s ease-in-out infinite}
+        .manual-lock-label{fill:#ff4545;font-size:12px;font-weight:900;letter-spacing:.45px;text-anchor:middle;paint-order:stroke;stroke:rgba(20,20,20,.95);stroke-width:2.4px;stroke-linejoin:round;animation:manualLockPulse 1.5s ease-in-out infinite}
         @keyframes manualLockPulse{0%,100%{opacity:1;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35)}50%{opacity:.62;text-shadow:0 0 2px rgba(255,35,35,.35)}}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
