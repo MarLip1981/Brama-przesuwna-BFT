@@ -291,6 +291,22 @@ class BramaPrzesuwnaBFTOptionsFlow(config_entries.OptionsFlowWithReload):
 
     async def async_step_gate(self, user_input=None):
         if user_input is not None:
+            # Do not enable the lighting UI unless relay 4 has been assigned.
+            if user_input.get(OPTION_ENTRANCE_LIGHTING):
+                entities = self.config_entry.options.get(
+                    "esphome_entities", self.config_entry.data.get("esphome_entities", {})
+                )
+                if not entities.get("entrance_lighting"):
+                    return self.async_show_form(
+                        step_id="gate",
+                        data_schema=_gate_schema(
+                            user_input.get(OPTION_PEDESTRIAN_MODE, False),
+                            True,
+                            user_input.get(OPTION_OPENING_DIRECTION, "right"),
+                            user_input.get(OPTION_LAMP_MODE, "auto"),
+                        ),
+                        errors={"base": "entrance_lighting_requires_relay"},
+                    )
             return self.async_create_entry(
                 title="", data={**self.config_entry.options, **user_input}
             )
