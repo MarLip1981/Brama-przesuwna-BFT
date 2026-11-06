@@ -87,7 +87,8 @@
       }
     },
     "error": {
-      "no_matching_esphome_device": "Nie znaleziono sterownika ESPHome BFT. Sprawdź połączenie sterownika i spróbuj ponownie."
+      "no_matching_esphome_device": "Nie znaleziono sterownika ESPHome BFT. Sprawdź połączenie sterownika i spróbuj ponownie.",
+      "entrance_lighting_requires_relay": "Najpierw przypisz encję przełącznika P4 (Własny) w sekcji przypisywania encji."
     }
   }
 }
