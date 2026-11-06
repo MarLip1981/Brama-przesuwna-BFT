@@ -44,6 +44,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Kierunek ruchu i orientacja animacji zgodne z ustawieniem integracji.
 - Lampka z trzema trybami efektu: automatyczny, zawsze migający lub bez migania.
 - Żółty znak ostrzegawczy na rysunku, widoczny wyłącznie wtedy, gdy fotokomórka zgłasza przeszkodę.
+- Ręczna blokada zamknięcia obsługiwana przez przekaźnik 3 ESPHome: przytrzymanie głównego przycisku karty przez 0,75 s przełącza blokadę; aktywny stan sygnalizuje osobny komunikat ostrzegawczy.
 - Automatyczne wykrywanie sterownika i encji w edytorze karty, z możliwością ręcznej korekty.
 - Możliwość nadpisania trybu lampki tylko dla konkretnej karty.
 
@@ -190,7 +191,9 @@ Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch 
 - Nagłówek pokazuje aktualny status bramy.
 - Krótkie kliknięcie nagłówka otwiera szczegóły encji stanu bramy.
 - Przytrzymanie nagłówka otwiera szczegóły encji pozycji.
-- Główny przycisk służy do sterowania bramą; opis przycisku zmienia się zależnie od stanu.
+- Krótkie kliknięcie głównego przycisku steruje bramą; opis przycisku zmienia się zależnie od stanu.
+- Przytrzymanie głównego przycisku przez 0,75 s przełącza ręczną blokadę zamknięcia (przekaźnik 3). Funkcja wymaga przypisanej encji przełącznika; karta wykrywa ją po nazwie „Blokada zamknięcia” lub pozwala wybrać ręcznie w edytorze.
+- Aktywna blokada wyświetla komunikat „Zablokowano ręcznie — zamykanie jest zablokowane”. Jest to osobny stan od rzeczywistej przeszkody fotokomórki.
 - Przycisk furtki pojawia się tylko wtedy, gdy tryb furtki jest włączony i przypisana jest odpowiednia encja.
 - Gdy fotokomórka wykryje przeszkodę (stan encji `on`), na środku rysunku między słupkami pojawia się żółty trójkąt z wykrzyknikiem. Po ustąpieniu przeszkody znak znika.
 
@@ -236,7 +239,8 @@ Poniższe przypisania dotyczą płytki ESP32 Relay X4 (AC/DC) i napędu BFT DEIM
 |---|---:|---:|---:|---|
 | Przekaźnik 1 | GPIO32 | 60 | 61 | Impuls sterujący bramą |
 | Przekaźnik 2 | GPIO33 | 60 | 62 | Impuls funkcji furtki / częściowego otwarcia |
-| Przekaźniki 3 i 4 | GPIO25 / GPIO26 | — | — | Rezerwa |
+| Przekaźnik 3 | GPIO25 | — | — | Ręczna blokada zamknięcia |
+| Przekaźnik 4 | GPIO26 | — | — | Własny — dowolne zastosowanie |
 
 GPIO steruje przekaźnikiem na płytce ESP32 Relay X4. Do centrali BFT podłączane są bezpotencjałowe styki COM i NO przekaźnika, a nie samo GPIO.
 
@@ -276,7 +280,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.13.9**.
+Aktualna wersja integracji i karty: **1.14.0**.
 
 ## Zgłaszanie problemów
 
