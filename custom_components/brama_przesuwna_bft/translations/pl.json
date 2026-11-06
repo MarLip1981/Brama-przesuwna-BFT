@@ -41,8 +41,10 @@
         "title": "Karta i działanie bramy",
         "description": "Dostosuj działanie karty do swojej instalacji.",
         "data": {
-          "pedestrian_mode_enabled": "Pokaż przycisk otwierania furtki",
-          "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)"
+          "pedestrian_mode_enabled": "Przycisk furtki — pokaż na karcie",
+          "entrance_lighting_enabled": "Oświetlenie wjazdu — używaj przekaźnika P4",
+          "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)",
+          "lamp_mode": "Tryb lampki ostrzegawczej"
         }
       },
       "notifications": {
@@ -56,14 +58,16 @@
       },
       "entities": {
         "title": "Korekta encji urządzenia",
-        "description": "Sprawdź encje automatycznie wykryte dla sterownika. Możesz ręcznie poprawić każde przypisanie.",
+        "description": "Sprawdź przypisania encji urządzenia {device}. Opcjonalne przełączniki P3 i P4 są wykorzystywane odpowiednio do blokady zamknięcia i oświetlenia wjazdu.",
         "data": {
           "status": "Stan bramy",
           "position": "Pozycja bramy",
           "main_button": "Sterowanie bramą",
           "pedestrian_button": "Sterowanie furtką",
           "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
-          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki"
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki",
+          "manual_lock": "Blokada zamknięcia — przekaźnik P3",
+          "entrance_lighting": "Oświetlenie wjazdu — przekaźnik P4"
         }
       }
     }
