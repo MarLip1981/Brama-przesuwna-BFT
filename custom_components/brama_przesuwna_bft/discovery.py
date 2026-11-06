@@ -16,6 +16,7 @@ ROLE_HINTS = {
     "pedestrian_button": ("otwórz jako furtkę", "otworz jako furtke"),
     "gate_button_event": ("ostatnie naciśnięcie przycisku bramy", "zdarzenie przycisku bramy"),
     "wicket_button_event": ("ostatnie naciśnięcie przycisku furtki", "zdarzenie przycisku furtki"),
+    "manual_lock": ("blokada zamknięcia",),
 }
 
 
