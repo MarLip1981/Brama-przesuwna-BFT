@@ -304,7 +304,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.14.1**.
+Aktualna wersja integracji i karty: **1.14.2**.
 
 ## Zgłaszanie problemów
 
