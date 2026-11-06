@@ -7,6 +7,7 @@ const ROLES = {
   main_button: { label: "Sterowanie bramą", domains: ["button"], test: /otworz zamknij brame|otworz zamknij|sterowanie brama|gate/i },
   pedestrian_button: { label: "Sterowanie furtką", domains: ["button"], test: /otworz jako furtke|furtk|pedestrian/i },
   photocell: { label: "Fotokomórka — wykrywanie przeszkody", domains: ["binary_sensor"], test: /fotokomorka.*przeszkoda|fotokomorka|photocell/i },
+  manual_lock: { label: "Blokada zamknięcia — przekaźnik 3", domains: ["switch"], test: /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i },
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -20,6 +21,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     this._hass = null;
     this._holdTimer = null;
     this._holdFired = false;
+    this._mainHoldTimer = null;
+    this._mainHoldFired = false;
   }
   setConfig(config) {
     this._config = {
@@ -37,14 +40,30 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   get hass() { return this._hass; }
   getCardSize() { return 3; }
   _entity(role) {
-    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity"})[role];
+    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity",manual_lock:"manual_lock_entity"})[role];
     return this._config?.radio?.[role] || this._config?.[legacyKey] ||
       this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] ||
       (role === "photocell" ? Object.keys(this._hass?.states || {}).find(id =>
-        id.startsWith("binary_sensor.") && /fotokomorka.*przeszkoda|fotokomorka|photocell/i.test(id)) : "") || "";
+        id.startsWith("binary_sensor.") && /fotokomorka.*przeszkoda|fotokomorka|photocell/i.test(id)) :
+       role === "manual_lock" ? Object.keys(this._hass?.states || {}).find(id => {
+         const state = this._hass.states[id];
+         return id.startsWith("switch.") && /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i.test(
+           normalize([id, state?.attributes?.friendly_name].join(" ")));
+       }) : "") || "";
   }
   _state(id) { return this._hass?.states?.[id]?.state; }
   _press(id) { if (id && this._hass) this._hass.callService("button", "press", { entity_id: id }); }
+  _toggleSwitch(id) { if (id && this._hass) this._hass.callService("switch", "toggle", { entity_id: id }); }
+  _mainDown() {
+    this._mainHoldFired = false;
+    clearTimeout(this._mainHoldTimer);
+    if (!this._entity("manual_lock")) return;
+    this._mainHoldTimer = setTimeout(() => {
+      this._mainHoldFired = true;
+      this._toggleSwitch(this._entity("manual_lock"));
+    }, 750);
+  }
+  _mainUp() { clearTimeout(this._mainHoldTimer); }
   _moreInfo(id) {
     if (id) this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: { entityId: id }, bubbles: true, composed: true
@@ -66,6 +85,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const mainButton = this._entity("main_button"), pedestrianButton = this._entity("pedestrian_button");
     const photocellId = this._entity("photocell");
     const photocellDanger = this._state(photocellId) === "on";
+    const manualLockId = this._entity("manual_lock");
+    const manualLockActive = this._state(manualLockId) === "on";
     const raw = this._state(positionId), n = Number(raw);
     const valid = raw !== undefined && !["unknown","unavailable"].includes(raw) && Number.isFinite(n);
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : 0;
@@ -111,6 +132,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       if (pLabel) pLabel.textContent = pedestrianLabel;
       const warning = this.shadowRoot.querySelector(".photocell-warning");
       if (warning) warning.style.display = photocellDanger ? "" : "none";
+      const manualBanner = this.shadowRoot.querySelector(".manual-lock-banner");
+      if (manualBanner) manualBanner.style.display = manualLockActive ? "flex" : "none";
       return;
     }
     this.shadowRoot.innerHTML = `
@@ -120,6 +143,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px}
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
+        .manual-lock-banner{display:${manualLockActive ? "flex" : "none"};align-items:center;gap:9px;margin:8px 2px 4px;padding:10px 12px;border-radius:12px;background:rgba(255,193,7,.14);color:var(--primary-text-color);font-size:14px;font-weight:700}
+        .manual-lock-banner ha-icon{color:#e0a000;--mdc-icon-size:22px;flex:0 0 auto}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
         .beacon-emission{transition:opacity .2s ease}
@@ -134,6 +159,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(statusLabel)}</div></div>
+        <div class="manual-lock-banner" role="status"><ha-icon icon="mdi:alert"></ha-icon><span>Zablokowano ręcznie — zamykanie jest zablokowane.</span></div>
         <div class="scene">
           <svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brama wjazdowa">
             <defs>
@@ -185,7 +211,13 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
-    this.shadowRoot.querySelector(".main").addEventListener("click", () => this._press(this._entity("main_button")));
+    const main = this.shadowRoot.querySelector(".main");
+    main.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._mainDown(); });
+    for (const event of ["pointerup","pointerleave","pointercancel"]) main.addEventListener(event, () => this._mainUp());
+    main.addEventListener("click", e => {
+      if (this._mainHoldFired) { this._mainHoldFired = false; e.preventDefault(); return; }
+      this._press(this._entity("main_button"));
+    });
     if (pedestrianEnabled) {
       this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
         this._press(/otwarta/i.test(this._state(this._entity("status")) || "") ? this._entity("main_button") : this._entity("pedestrian_button")));
@@ -316,7 +348,7 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
         <div class="field"><label>${meta.label}</label><select data-role="${role}">
           <option value="">— wybierz encję —</option>${options(role)}
         </select></div>`).join("")}
-      <p class="hint">Najpierw wybierz sterownik i sprawdź przypisane encje. Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT; listy pozwalają też wskazać je ręcznie.</p>
+      <p class="hint">Najpierw wybierz sterownik i sprawdź przypisane encje. Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT; listy pozwalają też wskazać je ręcznie. Przytrzymanie głównego przycisku przez 0,75 s przełącza ręczną blokadę zamknięcia (przekaźnik 3), jeśli przypisano jej encję.</p>
       <div class="field"><label>Nazwa karty</label><input class="name" value="${esc(this._config.name||"")}"></div>
       <div class="field"><label>Tryb lampki na tej karcie</label><select class="lamp-mode">
         <option value="integration" ${(!this._config.lamp_mode || this._config.lamp_mode==="integration")?"selected":""}>Użyj ustawienia integracji</option>
