@@ -51,7 +51,13 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
          const state = this._hass.states[id];
          return id.startsWith("switch.") && /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i.test(
            normalize([id, state?.attributes?.friendly_name].join(" ")));
-       }) : "") || "";
+       }) :
+       role === "gate_button_event" || role === "wicket_button_event" ?
+         Object.keys(this._hass?.states || {}).find(id => {
+           const state = this._hass.states[id];
+           return id.startsWith("sensor.") && ROLES[role].test.test(
+             normalize([id, state?.attributes?.friendly_name].join(" ")));
+         }) : "") || "";
   }
   _state(id) { return this._hass?.states?.[id]?.state; }
   _press(id) { if (id && this._hass) this._hass.callService("button", "press", { entity_id: id }); }
