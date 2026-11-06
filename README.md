@@ -32,6 +32,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 ### Integracja Home Assistant
 - Wykrywanie sterownika ESPHome na podstawie identyfikatora projektu firmware.
 - Graficzna konfiguracja urządzenia i przypisanych encji.
+- Udostępnianie stanu bramy, pozycji procentowej, kierunku ruchu i przypisanych encji jako atrybutów encji konfiguracyjnej `binary_sensor.brama_przesuwna_bft_tryb_furtki` — m.in. dla zewnętrznych pilotów z ekranem, takich jak Jarvis.
 - Ustawienie kierunku przesuwania bramy — w lewo lub w prawo, patrząc od strony posesji.
 - Włączanie lub wyłączanie przycisku furtki.
 - Globalne ustawienie trybu lampki na karcie.
@@ -304,7 +305,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.14.3**.
+Aktualna wersja integracji i karty: **1.14.5**.
 
 Wersja 1.14.3 dodaje opcjonalne wykorzystanie przekaźnika P4 do oświetlenia wjazdu. Funkcję włącza się w ustawieniach integracji; karta pokazuje oświetlenie na słupkach i odpowiedni przycisk zależnie od tego, czy użytkownik korzysta z furtki.
 
