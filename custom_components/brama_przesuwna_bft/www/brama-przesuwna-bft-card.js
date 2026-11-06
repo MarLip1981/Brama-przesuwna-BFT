@@ -10,6 +10,7 @@ const ROLES = {
   manual_lock: { label: "Blokada zamknięcia — przekaźnik 3", domains: ["switch"], test: /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i },
   gate_button_event: { label: "Ostatnie naciśnięcie przycisku bramy", domains: ["sensor"], test: /ostatnie nacisniecie przycisku bramy|zdarzenie przycisku bramy/i },
   wicket_button_event: { label: "Ostatnie naciśnięcie przycisku furtki", domains: ["sensor"], test: /ostatnie nacisniecie przycisku furtki|zdarzenie przycisku furtki/i },
+  entrance_lighting: { label: "Oświetlenie wjazdu — przekaźnik 4", domains: ["switch"], test: /oswietlenie wjazdu|przekaznik 4|relay 4|rele 4/i },
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -25,6 +26,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     this._holdFired = false;
     this._mainHoldTimer = null;
     this._mainHoldFired = false;
+    this._auxHoldTimer = null;
+    this._auxHoldFired = false;
   }
   setConfig(config) {
     this._config = {
@@ -42,7 +45,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   get hass() { return this._hass; }
   getCardSize() { return 3; }
   _entity(role) {
-    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity",manual_lock:"manual_lock_entity",gate_button_event:"gate_button_event_entity",wicket_button_event:"wicket_button_event_entity"})[role];
+    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity",manual_lock:"manual_lock_entity",entrance_lighting:"entrance_lighting_entity",gate_button_event:"gate_button_event_entity",wicket_button_event:"wicket_button_event_entity"})[role];
     return this._config?.radio?.[role] || this._config?.[legacyKey] ||
       this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] ||
       (role === "photocell" ? Object.keys(this._hass?.states || {}).find(id =>
@@ -50,6 +53,11 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
        role === "manual_lock" ? Object.keys(this._hass?.states || {}).find(id => {
          const state = this._hass.states[id];
          return id.startsWith("switch.") && /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i.test(
+           normalize([id, state?.attributes?.friendly_name].join(" ")));
+       }) :
+       role === "entrance_lighting" ? Object.keys(this._hass?.states || {}).find(id => {
+         const state = this._hass.states[id];
+         return id.startsWith("switch.") && /oswietlenie wjazdu|relay 4|rele 4|przekaznik 4/i.test(
            normalize([id, state?.attributes?.friendly_name].join(" ")));
        }) :
        role === "gate_button_event" || role === "wicket_button_event" ?
@@ -90,6 +98,54 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       } catch (_) {}
     }
   }
+  // Long-pressing the wicket button toggles P4 only when lighting mode is enabled.
+  _auxDown(event) {
+    this._auxHoldFired = false;
+    clearTimeout(this._auxHoldTimer);
+    const lightEntity = this._entity("entrance_lighting");
+    if (!lightEntity) return;
+    if (event?.currentTarget && event.pointerId !== undefined) {
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_) {}
+    }
+    this._auxHoldTimer = setTimeout(() => {
+      this._auxHoldFired = true;
+      this._toggleSwitch(lightEntity);
+    }, 750);
+  }
+  _auxUp(event) {
+    clearTimeout(this._auxHoldTimer);
+    if (event?.currentTarget && event.pointerId !== undefined) {
+      try {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+      } catch (_) {}
+    }
+  }
+  _bindActionButtons(pedestrianEnabled, lightingEnabled) {
+    const main = this.shadowRoot.querySelector(".main");
+    if (main) {
+      main.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._mainDown(e); });
+      for (const event of ["pointerup","pointercancel"]) main.addEventListener(event, e => this._mainUp(e));
+      main.addEventListener("click", e => {
+        if (this._mainHoldFired) { this._mainHoldFired = false; e.preventDefault(); return; }
+        this._press(this._entity("main_button"));
+      });
+    }
+    if (pedestrianEnabled) {
+      const button = this.shadowRoot.querySelector(".pedestrian");
+      if (button) {
+        if (lightingEnabled) {
+          button.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._auxDown(e); });
+          for (const event of ["pointerup","pointercancel"]) button.addEventListener(event, e => this._auxUp(e));
+        }
+        button.addEventListener("click", e => {
+          if (this._auxHoldFired) { this._auxHoldFired = false; e.preventDefault(); return; }
+          this._press(/otwarta/i.test(this._state(this._entity("status")) || "") ? this._entity("main_button") : this._entity("pedestrian_button"));
+        });
+      }
+    } else if (lightingEnabled) {
+      this.shadowRoot.querySelector(".lighting")?.addEventListener("click", () => this._toggleSwitch(this._entity("entrance_lighting")));
+    }
+  }
   _moreInfo(id) {
     if (id) this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: { entityId: id }, bubbles: true, composed: true
@@ -113,6 +169,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const photocellDanger = this._state(photocellId) === "on";
     const manualLockId = this._entity("manual_lock");
     const manualLockActive = this._state(manualLockId) === "on";
+    const entranceLightingId = this._entity("entrance_lighting");
+    const entranceLightingActive = this._state(entranceLightingId) === "on";
     const gateButtonEvent = this._state(this._entity("gate_button_event"));
     const wicketButtonEvent = this._state(this._entity("wicket_button_event"));
     const eventLabel = value => {
@@ -134,6 +192,12 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     else if (!status || ["unknown","unavailable","Brak stanu"].includes(status)) statusLabel = "Brak stanu";
     const direction = mode?.attributes?.opening_direction || "right";
     const pedestrianEnabled = mode?.state === "on" && Boolean(pedestrianButton);
+    // P4 is presented as driveway lighting only after explicit opt-in in the integration options.
+    const lightingEnabled = mode?.attributes?.entrance_lighting_enabled === true && Boolean(entranceLightingId);
+    const auxiliaryMode = pedestrianEnabled ? "pedestrian" : lightingEnabled ? "lighting" : "none";
+    const auxiliaryMarkup = pedestrianEnabled
+      ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>`
+      : lightingEnabled ? `<button class="lighting"><ha-icon icon="mdi:lightbulb"></ha-icon><span>Oświetlenie wjazdu: ${entranceLightingActive ? "WŁ." : "WYŁ."}</span></button>` : "";
     // Labels and actions follow the original YAML card state machine.
     const mainLabel = moving ? "Brama - Stop" : open ? "Brama - Zamknij" :
       closed ? "Brama - Otwórz" : "Brama - Steruj";
@@ -159,11 +223,18 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       beacon.classList.toggle("beacon-blink", lampBlink);
       this.shadowRoot.querySelector(".main span").textContent = mainLabel;
       const actions = this.shadowRoot.querySelector(".actions");
-      actions.style.gridTemplateColumns = pedestrianEnabled ? "1fr 1fr" : "1fr";
-      const pedestrian = actions.querySelector(".pedestrian");
-      if (pedestrian) pedestrian.style.display = pedestrianEnabled ? "flex" : "none";
-      const pLabel = actions.querySelector(".pedestrian span");
-      if (pLabel) pLabel.textContent = pedestrianLabel;
+      if (actions.dataset.auxiliaryMode !== auxiliaryMode) {
+        actions.innerHTML = `<button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${auxiliaryMarkup}`;
+        actions.dataset.auxiliaryMode = auxiliaryMode;
+        this._bindActionButtons(pedestrianEnabled, lightingEnabled);
+      }
+      actions.style.gridTemplateColumns = auxiliaryMode === "none" ? "1fr" : "1fr 1fr";
+      const mainLabelNode = actions.querySelector(".main span");
+      if (mainLabelNode) mainLabelNode.textContent = mainLabel;
+      const auxiliaryLabelNode = actions.querySelector(".pedestrian span, .lighting span");
+      if (auxiliaryLabelNode) auxiliaryLabelNode.textContent = pedestrianEnabled ? pedestrianLabel : `Oświetlenie wjazdu: ${entranceLightingActive ? "WŁ." : "WYŁ."}`;
+      const lightGlow = this.shadowRoot.querySelector(".entrance-light-emission");
+      if (lightGlow) lightGlow.style.display = lightingEnabled && entranceLightingActive ? "inline" : "none";
       const warning = this.shadowRoot.querySelector(".photocell-warning");
       if (warning) warning.style.display = (photocellDanger || manualLockActive) ? "inline" : "none";
       const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
@@ -192,10 +263,11 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .beacon-emission{transition:opacity .2s ease}
         .beacon-blink{animation:beaconBlink 1s steps(1,end) infinite}
         @keyframes beaconBlink{0%,49.999%{opacity:0}50%,100%{opacity:1}}
-        .actions{display:grid;grid-template-columns:${pedestrianEnabled ? "1fr 1fr" : "1fr"};gap:8px;margin-top:8px}
+        .actions{display:grid;grid-template-columns:${auxiliaryMode === "none" ? "1fr" : "1fr 1fr"};gap:8px;margin-top:8px}
         button{touch-action:none;-webkit-user-select:none;user-select:none;min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
         button.main{color:#429ee8}
         button.pedestrian{color:#39b982}
+        button.lighting{color:#e7b84b}
         button ha-icon{--mdc-icon-size:28px;flex:0 0 auto}
         button{display:flex;align-items:center;justify-content:center;gap:9px}
       </style>
@@ -208,12 +280,14 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <linearGradient id="gateFill" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#465b65"/><stop offset="50%" stop-color="#80949d"/><stop offset="100%" stop-color="#465b65"/></linearGradient>
               <radialGradient id="lampOuterGlow"><stop offset="0%" stop-color="#ffd77a" stop-opacity=".30"/><stop offset="42%" stop-color="#ffbd4d" stop-opacity=".20"/><stop offset="100%" stop-color="#ff9f24" stop-opacity="0"/></radialGradient><radialGradient id="lampLight"><stop offset="0%" stop-color="#ffe3a0" stop-opacity=".34"/><stop offset="48%" stop-color="#ffc15e" stop-opacity=".17"/><stop offset="100%" stop-color="#ffad35" stop-opacity="0"/></radialGradient>
               <filter id="lampDiffusion" x="-100%" y="-100%" width="300%" height="300%"><feGaussianBlur stdDeviation="7"/></filter>
+              <radialGradient id="pillarLight"><stop offset="0%" stop-color="#ffe6a0" stop-opacity=".65"/><stop offset="55%" stop-color="#ffc65e" stop-opacity=".28"/><stop offset="100%" stop-color="#ffb52e" stop-opacity="0"/></radialGradient>
             </defs>
             <g transform="${direction === "left" ? "translate(400 0) scale(-1 1)" : ""}"><rect x="2" y="2" width="396" height="150" rx="12" fill="url(#sky)"/>
             <path d="M5 130 H395" stroke="#637983" stroke-width="2" opacity=".7"/><path d="M5 141 H395" stroke="#637983" stroke-width="1" opacity=".22"/>
             <g fill="#637983" stroke="#344953" stroke-width="1"><rect x="5" y="47" width="30" height="11" rx="1"/><rect x="5" y="63" width="30" height="11" rx="1"/><rect x="5" y="79" width="30" height="11" rx="1"/><rect x="5" y="95" width="30" height="11" rx="1"/><rect x="298" y="47" width="97" height="11" rx="1"/><rect x="298" y="63" width="97" height="11" rx="1"/><rect x="298" y="79" width="97" height="11" rx="1"/><rect x="298" y="95" width="97" height="11" rx="1"/></g>
             <rect x="34" y="30" width="17" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M32 30 H53" stroke="#d0d8db" stroke-width="4"/>
             <rect x="279" y="30" width="19" height="100" rx="2" fill="#9aa8ad" stroke="#637983" stroke-width="2"/><path d="M277 30 H300" stroke="#d0d8db" stroke-width="4"/>
+            <g class="entrance-light-emission" style="display:${lightingEnabled && entranceLightingActive ? "inline" : "none"}"><ellipse cx="42.5" cy="38" rx="34" ry="42" fill="url(#pillarLight)"/><ellipse cx="288.5" cy="38" rx="36" ry="43" fill="url(#pillarLight)"/><circle cx="42.5" cy="34" r="3.5" fill="#fff0b1"/><circle cx="288.5" cy="34" r="3.5" fill="#fff0b1"/></g>
             <path d="M281 30 V22 Q281 10 288.5 10 Q296 10 296 22 V30 Z"
                   fill="#596a70" stroke="#46565e" stroke-width="1.5"/>
             <g class="beacon-emission ${lampBlink ? "beacon-blink" : ""}" style="opacity:${lamp ? "1" : "0"};animation-delay:${lampBlink ? "-" + lampBlinkPhase.toFixed(3) + "s" : "0s"}">
@@ -250,24 +324,14 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
           <span class="gate-button-event">Przycisk bramy: ${esc(eventLabel(gateButtonEvent))}</span>
           <span class="wicket-button-event">Przycisk furtki: ${esc(eventLabel(wicketButtonEvent))}</span>
         </div>
-        <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${pedestrianEnabled ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>` : ""}</div>
+        <div class="actions" data-auxiliary-mode="${auxiliaryMode}"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${auxiliaryMarkup}</div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
     head.addEventListener("pointerdown", () => this._headerDown());
     for (const event of ["pointerup","pointerleave","pointercancel"]) head.addEventListener(event, () => this._headerUp());
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
-    const main = this.shadowRoot.querySelector(".main");
-    main.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._mainDown(e); });
-    for (const event of ["pointerup","pointercancel"]) main.addEventListener(event, e => this._mainUp(e));
-    main.addEventListener("click", e => {
-      if (this._mainHoldFired) { this._mainHoldFired = false; e.preventDefault(); return; }
-      this._press(this._entity("main_button"));
-    });
-    if (pedestrianEnabled) {
-      this.shadowRoot.querySelector(".pedestrian").addEventListener("click", () =>
-        this._press(/otwarta/i.test(this._state(this._entity("status")) || "") ? this._entity("main_button") : this._entity("pedestrian_button")));
-    }
+    this._bindActionButtons(pedestrianEnabled, lightingEnabled);
   }
   static getConfigElement() { return document.createElement("brama-przesuwna-bft-card-editor"); }
   static getStubConfig() { return {}; }
