@@ -17,6 +17,8 @@
           "position": "Pozycja bramy",
           "main_button": "Sterowanie bramą",
           "pedestrian_button": "Sterowanie furtką (opcjonalnie)",
+          "gate_button_event": "Ostatnie naciśnięcie przycisku bramy (opcjonalnie)",
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki (opcjonalnie)",
           "opening_direction": "Kierunek otwierania (patrząc od podwórka)"
         }
       }
@@ -73,7 +75,9 @@
           "status": "Stan bramy",
           "position": "Pozycja bramy",
           "main_button": "Sterowanie bramą",
-          "pedestrian_button": "Sterowanie furtką"
+          "pedestrian_button": "Sterowanie furtką",
+          "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki"
         }
       }
     },
