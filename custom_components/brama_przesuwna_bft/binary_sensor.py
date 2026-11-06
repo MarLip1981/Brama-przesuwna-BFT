@@ -35,11 +35,11 @@ async def async_setup_entry(
         if entity_id
     ]
 
-    if watched:
-        async def _refresh_gate_data(event: Event) -> None:
-            """Refresh exposed attributes when the configured gate data changes."""
-            entity.async_write_ha_state()
+    async def _refresh_gate_data(event: Event) -> None:
+        """Refresh exposed attributes when the configured gate data changes."""
+        entity.async_write_ha_state()
 
+    if watched:
         entry.async_on_unload(
             async_track_state_change_event(hass, watched, _refresh_gate_data)
         )
@@ -78,11 +78,23 @@ class PedestrianModeSensor(BinarySensorEntity):
         entities = self._entities()
         status_entity = entities.get("status")
         position_entity = entities.get("position")
-        status = self.hass.states.get(status_entity) if self.hass and status_entity else None
-        position = self.hass.states.get(position_entity) if self.hass and position_entity else None
+        status = (
+            self.hass.states.get(status_entity)
+            if self.hass and status_entity
+            else None
+        )
+        position = (
+            self.hass.states.get(position_entity)
+            if self.hass and position_entity
+            else None
+        )
 
         try:
-            gate_position = float(position.state) if position and position.state not in ("unknown", "unavailable") else None
+            gate_position = (
+                float(position.state)
+                if position and position.state not in ("unknown", "unavailable")
+                else None
+            )
         except (TypeError, ValueError):
             gate_position = None
 
