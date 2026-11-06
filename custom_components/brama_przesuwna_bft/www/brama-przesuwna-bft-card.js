@@ -10,7 +10,7 @@ const ROLES = {
   manual_lock: { label: "Blokada zamknięcia — przekaźnik 3", domains: ["switch"], test: /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i },
   gate_button_event: { label: "Ostatnie naciśnięcie przycisku bramy", domains: ["sensor"], test: /ostatnie nacisniecie przycisku bramy|zdarzenie przycisku bramy/i },
   wicket_button_event: { label: "Ostatnie naciśnięcie przycisku furtki", domains: ["sensor"], test: /ostatnie nacisniecie przycisku furtki|zdarzenie przycisku furtki/i },
-  entrance_lighting: { label: "Oświetlenie wjazdu — przekaźnik 4", domains: ["switch"], test: /oswietlenie wjazdu|przekaznik 4|relay 4|rele 4|wlasny/i },
+  entrance_lighting: { label: "Oświetlenie wjazdu — przekaźnik 4", domains: ["switch"], test: /oswietlenie|przekaznik 4|relay 4|rele 4/i },
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -57,7 +57,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
        }) :
        role === "entrance_lighting" ? Object.keys(this._hass?.states || {}).find(id => {
          const state = this._hass.states[id];
-         return id.startsWith("switch.") && /oswietlenie wjazdu|relay 4|rele 4|przekaznik 4|wlasny/i.test(
+         return id.startsWith("switch.") && /oswietlenie|relay 4|rele 4|przekaznik 4/i.test(
            normalize([id, state?.attributes?.friendly_name].join(" ")));
        }) :
        role === "gate_button_event" || role === "wicket_button_event" ?
