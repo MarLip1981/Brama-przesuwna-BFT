@@ -46,7 +46,9 @@
           "status": "Gate status",
           "position": "Gate position",
           "main_button": "Gate control",
-          "pedestrian_button": "Pedestrian gate control"
+          "pedestrian_button": "Pedestrian gate control",
+          "gate_button_event": "Last gate button press",
+          "wicket_button_event": "Last pedestrian button press"
         }
       },
       "gate": {
