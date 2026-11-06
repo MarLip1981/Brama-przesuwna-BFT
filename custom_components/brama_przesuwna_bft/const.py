@@ -14,4 +14,4 @@ OPTION_NOTIFY_TARGETS = "notify_targets"
 DEFAULT_NOTIFY_TARGET = "cala_rodzina"
 GATE_STATUS_ENTITY = "sensor.brama_wjazdowa_dokladny_stan_bramy"
 PEDESTRIAN_MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki"
-PLATFORMS = ["binary_sensor"]
+PLATFORMS = ["binary_sensor", "sensor"]
