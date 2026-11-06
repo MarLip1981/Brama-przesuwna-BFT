@@ -44,6 +44,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Kierunek ruchu i orientacja animacji zgodne z ustawieniem integracji.
 - Lampka z trzema trybami efektu: automatyczny, zawsze migający lub bez migania.
 - Żółty znak ostrzegawczy na rysunku, widoczny wyłącznie wtedy, gdy fotokomórka zgłasza przeszkodę.
+- Osobny komunikat **„Zablokowano ręcznie”**, gdy aktywny jest przełącznik przekaźnika 3 („Blokada zamknięcia”). Funkcja nie wymaga odczytu fotokomórki przez ESPHome i nie utożsamia blokady ręcznej z rzeczywistą przeszkodą.
 - Automatyczne wykrywanie sterownika i encji w edytorze karty, z możliwością ręcznej korekty.
 - Możliwość nadpisania trybu lampki tylko dla konkretnej karty.
 
@@ -193,6 +194,8 @@ Karta łączy panel sterowania z animowaną wizualizacją mechaniki bramy. Ruch 
 - Główny przycisk służy do sterowania bramą; opis przycisku zmienia się zależnie od stanu.
 - Przycisk furtki pojawia się tylko wtedy, gdy tryb furtki jest włączony i przypisana jest odpowiednia encja.
 - Gdy fotokomórka wykryje przeszkodę (stan encji `on`), na środku rysunku między słupkami pojawia się żółty trójkąt z wykrzyknikiem. Po ustąpieniu przeszkody znak znika.
+- Gdy przełącznik **„Blokada zamknięcia”** (przekaźnik 3 ESPHome) jest aktywny (`on`), karta pokazuje osobny komunikat **„Zablokowano ręcznie — zamykanie jest zablokowane”**. Encję można wykryć automatycznie po nazwie lub wybrać ręcznie w edytorze karty. Jeśli przełącznik nie jest dostępny, komunikat nie jest wyświetlany.
+- Przekaźnik 4 („Własny”) pozostaje do dowolnego wykorzystania i nie wpływa na działanie karty.
 
 **Ważne:** karta prezentuje stan przekazywany przez Home Assistant. Nie zastępuje fabrycznych zabezpieczeń napędu ani fizycznej fotokomórki.
 
@@ -210,6 +213,8 @@ Firmware udostępnia między innymi:
 | Kalibracja czasu | Kalibruj czas zamykania | `button` |
 | Fotokomórka | Fotokomórka — przeszkoda | `binary_sensor` |
 | Czas przejazdu | Czas przejazdu bramy | `number` |
+| Blokada zamknięcia | Blokada zamknięcia (przekaźnik 3) | `switch` |
+| Przekaźnik 4 | Własny | `switch` |
 | Restart sterownika | Restart ESP32 — brama wjazdowa | `button` |
 | Połączenie ESPHome | Status połączenia bramy | `binary_sensor` |
 | Sygnał Wi-Fi | Sygnał WiFi bramy | `sensor` |
@@ -236,7 +241,8 @@ Poniższe przypisania dotyczą płytki ESP32 Relay X4 (AC/DC) i napędu BFT DEIM
 |---|---:|---:|---:|---|
 | Przekaźnik 1 | GPIO32 | 60 | 61 | Impuls sterujący bramą |
 | Przekaźnik 2 | GPIO33 | 60 | 62 | Impuls funkcji furtki / częściowego otwarcia |
-| Przekaźniki 3 i 4 | GPIO25 / GPIO26 | — | — | Rezerwa |
+| Przekaźnik 3 | GPIO25 | — | — | Ręczna blokada zamykania — przełącznik w ESPHome |
+| Przekaźnik 4 | GPIO26 | — | — | Własny — rezerwa użytkownika |
 
 GPIO steruje przekaźnikiem na płytce ESP32 Relay X4. Do centrali BFT podłączane są bezpotencjałowe styki COM i NO przekaźnika, a nie samo GPIO.
 
@@ -276,7 +282,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.13.9**.
+Aktualna wersja integracji i karty: **1.14.0**.
 
 ## Zgłaszanie problemów
 
