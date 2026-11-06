@@ -3,6 +3,8 @@
 DOMAIN = "brama_przesuwna_bft"
 DEFAULT_NAME = "Brama przesuwna BFT"
 OPTION_PEDESTRIAN_MODE = "pedestrian_mode_enabled"
+# Optional use of relay 4 for driveway lighting.
+OPTION_ENTRANCE_LIGHTING = "entrance_lighting_enabled"
 OPTION_OPENING_DIRECTION = "opening_direction"
 OPTION_LAMP_MODE = "lamp_mode"
 DEFAULT_LAMP_MODE = "auto"
