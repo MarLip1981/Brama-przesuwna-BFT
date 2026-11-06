@@ -8,6 +8,8 @@ const ROLES = {
   pedestrian_button: { label: "Sterowanie furtką", domains: ["button"], test: /otworz jako furtke|furtk|pedestrian/i },
   photocell: { label: "Fotokomórka — wykrywanie przeszkody", domains: ["binary_sensor"], test: /fotokomorka.*przeszkoda|fotokomorka|photocell/i },
   manual_lock: { label: "Blokada zamknięcia — przekaźnik 3", domains: ["switch"], test: /blokada zamkniecia|relay 3|rele 3|przekaznik 3/i },
+  gate_button_event: { label: "Ostatnie naciśnięcie przycisku bramy", domains: ["sensor"], test: /ostatnie nacisniecie przycisku bramy|zdarzenie przycisku bramy/i },
+  wicket_button_event: { label: "Ostatnie naciśnięcie przycisku furtki", domains: ["sensor"], test: /ostatnie nacisniecie przycisku furtki|zdarzenie przycisku furtki/i },
 };
 const MODE_ENTITY = "binary_sensor.brama_przesuwna_bft_tryb_furtki";
 const esc = (value) => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
@@ -40,7 +42,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   get hass() { return this._hass; }
   getCardSize() { return 3; }
   _entity(role) {
-    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity",manual_lock:"manual_lock_entity"})[role];
+    const legacyKey = ({status:"status_entity",position:"position_entity",main_button:"main_button",pedestrian_button:"pedestrian_button",photocell:"photocell_entity",manual_lock:"manual_lock_entity",gate_button_event:"gate_button_event_entity",wicket_button_event:"wicket_button_event_entity"})[role];
     return this._config?.radio?.[role] || this._config?.[legacyKey] ||
       this._hass?.states?.[MODE_ENTITY]?.attributes?.entities?.[role] ||
       (role === "photocell" ? Object.keys(this._hass?.states || {}).find(id =>
@@ -87,6 +89,14 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     const photocellDanger = this._state(photocellId) === "on";
     const manualLockId = this._entity("manual_lock");
     const manualLockActive = this._state(manualLockId) === "on";
+    const gateButtonEvent = this._state(this._entity("gate_button_event"));
+    const wicketButtonEvent = this._state(this._entity("wicket_button_event"));
+    const eventLabel = value => {
+      if (!value || ["unknown", "unavailable"].includes(value)) return "Brak danych";
+      if (/dlug|dług/i.test(value)) return "Długie przytrzymanie";
+      if (/krot|krót/i.test(value)) return "Krótkie naciśnięcie";
+      return value;
+    };
     const raw = this._state(positionId), n = Number(raw);
     const valid = raw !== undefined && !["unknown","unavailable"].includes(raw) && Number.isFinite(n);
     const pos = valid ? Math.max(0, Math.min(100, Math.round(n))) : 0;
@@ -134,6 +144,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       if (warning) warning.style.display = (photocellDanger || manualLockActive) ? "inline" : "none";
       const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
       if (manualLabel) manualLabel.style.display = manualLockActive ? "block" : "none";
+      const gateEventNode = this.shadowRoot.querySelector(".gate-button-event");
+      const wicketEventNode = this.shadowRoot.querySelector(".wicket-button-event");
+      if (gateEventNode) gateEventNode.textContent = "Przycisk bramy: " + eventLabel(gateButtonEvent);
+      if (wicketEventNode) wicketEventNode.textContent = "Przycisk furtki: " + eventLabel(wicketButtonEvent);
       const warningLabel = this.shadowRoot.querySelector(".photocell-warning");
       if (warningLabel) warningLabel.setAttribute("aria-label", manualLockActive ? "Ręczna blokada zamknięcia" : "Fotokomórka wykryła przeszkodę");
       return;
@@ -146,6 +160,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
         .manual-lock-label{display:${manualLockActive ? "block" : "none"};margin:2px 4px 6px;text-align:center;color:#ff4545;font-size:13px;font-weight:900;letter-spacing:.055em;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35);animation:manualLockPulse 1.5s ease-in-out infinite}
+        .button-events{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin:6px 3px 2px;color:var(--secondary-text-color);font-size:11px;text-align:center}
+        .button-events span{padding:5px 3px;border-radius:8px;background:var(--secondary-background-color)}
         @keyframes manualLockPulse{0%,100%{opacity:1;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35)}50%{opacity:.62;text-shadow:0 0 2px rgba(255,35,35,.35)}}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
@@ -206,6 +222,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
           </svg>
         </div>
         <div class="manual-lock-label" role="status" style="display:${manualLockActive ? "block" : "none"}">RĘCZNA BLOKADA ZAMKNIĘCIA</div>
+        <div class="button-events" aria-live="polite">
+          <span class="gate-button-event">Przycisk bramy: ${esc(eventLabel(gateButtonEvent))}</span>
+          <span class="wicket-button-event">Przycisk furtki: ${esc(eventLabel(wicketButtonEvent))}</span>
+        </div>
         <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${pedestrianEnabled ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>` : ""}</div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
@@ -350,7 +370,7 @@ class BramaPrzesuwnaBFTCardEditor extends HTMLElement {
         <div class="field"><label>${meta.label}</label><select data-role="${role}">
           <option value="">— wybierz encję —</option>${options(role)}
         </select></div>`).join("")}
-      <p class="hint">Najpierw wybierz sterownik i sprawdź przypisane encje. Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT; listy pozwalają też wskazać je ręcznie. Przytrzymanie głównego przycisku przez 0,75 s przełącza ręczną blokadę zamknięcia (przekaźnik 3), jeśli przypisano jej encję.</p>
+      <p class="hint">Najpierw wybierz sterownik i sprawdź przypisane encje. Automatyczne przypisanie dotyczy wyłącznie encji sterownika BFT; listy pozwalają też wskazać je ręcznie. Fizyczne przyciski bramy i furtki rozróżniają krótkie naciśnięcie oraz długie przytrzymanie; karta pokazuje ostatnio rozpoznane zdarzenie, jeśli firmware udostępnia odpowiednie sensory.</p>
       <div class="field"><label>Nazwa karty</label><input class="name" value="${esc(this._config.name||"")}"></div>
       <div class="field"><label>Tryb lampki na tej karcie</label><select class="lamp-mode">
         <option value="integration" ${(!this._config.lamp_mode || this._config.lamp_mode==="integration")?"selected":""}>Użyj ustawienia integracji</option>
