@@ -132,8 +132,10 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       if (pLabel) pLabel.textContent = pedestrianLabel;
       const warning = this.shadowRoot.querySelector(".photocell-warning");
       if (warning) warning.style.display = photocellDanger ? "" : "none";
-      const manualBanner = this.shadowRoot.querySelector(".manual-lock-banner");
-      if (manualBanner) manualBanner.style.display = manualLockActive ? "flex" : "none";
+      const manualLabel = this.shadowRoot.querySelector(".manual-lock-label");
+      if (manualLabel) manualLabel.style.display = manualLockActive ? "block" : "none";
+      const warningLabel = this.shadowRoot.querySelector(".photocell-warning");
+      if (warningLabel) warningLabel.setAttribute("aria-label", manualLockActive ? "Ręczna blokada zamknięcia" : "Fotokomórka wykryła przeszkodę");
       return;
     }
     this.shadowRoot.innerHTML = `
@@ -143,8 +145,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .head{display:flex;justify-content:space-between;align-items:center;gap:8px;cursor:pointer;user-select:none;padding:4px}
         h2{font-size:20px;margin:0;font-weight:600}.status{font-size:14px;font-weight:500;text-align:right;white-space:nowrap}
         .status.closed{color:#42c878}.status.open{color:#ff4545;font-weight:800;text-shadow:0 0 8px rgba(255,50,50,.65)}.status.moving{color:#ffbd4a}
-        .manual-lock-banner{display:${manualLockActive ? "flex" : "none"};align-items:center;gap:9px;margin:8px 2px 4px;padding:10px 12px;border-radius:12px;background:rgba(255,193,7,.14);color:var(--primary-text-color);font-size:14px;font-weight:700}
-        .manual-lock-banner ha-icon{color:#e0a000;--mdc-icon-size:22px;flex:0 0 auto}
+        .manual-lock-label{display:${manualLockActive ? "block" : "none"};margin:2px 4px 6px;text-align:center;color:#ff4545;font-size:13px;font-weight:900;letter-spacing:.055em;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35);animation:manualLockPulse 1.5s ease-in-out infinite}
+        @keyframes manualLockPulse{0%,100%{opacity:1;text-shadow:0 0 5px rgba(255,35,35,.65),0 0 11px rgba(255,35,35,.35)}50%{opacity:.62;text-shadow:0 0 2px rgba(255,35,35,.35)}}
         .scene{width:100%;margin:0;overflow:hidden}svg{display:block;width:100%;height:155px}
         .gate-leaf{transition:transform 1.05s linear}
         .beacon-emission{transition:opacity .2s ease}
@@ -159,7 +161,6 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
       </style>
       <ha-card>
         <div class="head" role="button" tabindex="0"><h2>${esc(this._config.name)}</h2><div class="status ${statusClass}">${esc(statusLabel)}</div></div>
-        <div class="manual-lock-banner" role="status"><ha-icon icon="mdi:alert"></ha-icon><span>Zablokowano ręcznie — zamykanie jest zablokowane.</span></div>
         <div class="scene">
           <svg viewBox="0 0 400 155" width="100%" height="155" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Brama wjazdowa">
             <defs>
@@ -200,10 +201,11 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
               <circle cx="23.2" cy="26.8" r="1.45" fill="#c5cbd0" stroke="#5b6268" stroke-width=".45"/>
               <path d="M6 32 H29" stroke="#64717b" stroke-width="1"/>
             </g>
-            <g class="photocell-warning" transform="translate(174.5 79)" aria-label="Fotokomórka wykryła przeszkodę" style="display:${photocellDanger ? "inline" : "none"}"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>
+            <g class="photocell-warning" transform="translate(174.5 79)" aria-label="${manualLockActive ? "Ręczna blokada zamknięcia" : "Fotokomórka wykryła przeszkodę"}" style="display:${photocellDanger || manualLockActive ? "inline" : "none"}"><path d="M0 -17 L19 16 H-19 Z" fill="#ffd21f" stroke="#171717" stroke-width="2.2" stroke-linejoin="round"/><path d="M0 -7 V5" stroke="#171717" stroke-width="3.5" stroke-linecap="round"/><circle cx="0" cy="10" r="1.9" fill="#171717"/></g>
             </g>
           </svg>
         </div>
+        <div class="manual-lock-label" role="status" style="display:${manualLockActive ? "block" : "none"}">RĘCZNA BLOKADA ZAMKNIĘCIA</div>
         <div class="actions"><button class="main"><ha-icon icon="mdi:gate"></ha-icon><span>${mainLabel}</span></button>${pedestrianEnabled ? `<button class="pedestrian"><ha-icon icon="mdi:walk"></ha-icon><span>${pedestrianLabel}</span></button>` : ""}</div>
       </ha-card>`;
     const head = this.shadowRoot.querySelector(".head");
