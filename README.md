@@ -24,6 +24,9 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Szacowanie położenia skrzydła w procentach na podstawie czasu przejazdu.
 - Ręczna kalibracja czasu pełnego zamykania oraz okresowa kalibracja tygodniowa.
 - Możliwość zmiany czasu przejazdu i restartu sterownika z Home Assistant.
+- Obsługa dwóch fizycznych przycisków: krótkie naciśnięcie steruje odpowiednim wejściem BFT, a długie przytrzymanie przełącza przekaźnik P3 lub P4.
+- Rozpoznawanie długiego przytrzymania po 1,5 s; impuls sterujący jest wysyłany dopiero po puszczeniu przycisku, więc długie przytrzymanie nie wywołuje przypadkowego ruchu bramy.
+- Publikowanie ostatniego rozpoznanego rodzaju naciśnięcia obu przycisków do Home Assistant.
 - Odczyt siły sygnału Wi-Fi.
 
 ### Integracja Home Assistant
@@ -45,6 +48,7 @@ Punktem odniesienia projektu jest napęd **BFT DEIMOS ULTRA BT B 600** oraz ster
 - Lampka z trzema trybami efektu: automatyczny, zawsze migający lub bez migania.
 - Żółty znak ostrzegawczy na rysunku, widoczny wyłącznie wtedy, gdy fotokomórka zgłasza przeszkodę.
 - Ręczna blokada zamknięcia obsługiwana przez przekaźnik 3 ESPHome: przytrzymanie głównego przycisku karty przez 0,75 s przełącza blokadę. Aktywna blokada pokazuje trójkąt ostrzegawczy na grafice bramy oraz czerwony, pulsujący napis „RĘCZNA BLOKADA ZAMKNIĘCIA” pod grafiką. Krótkie kliknięcia nadal realizują standardową sekwencję sterowania centrali BFT.
+- Panel diagnostyczny pokazujący ostatnie rozpoznane naciśnięcie fizycznego przycisku bramy i furtki (krótkie lub długie), o ile firmware udostępnia odpowiednie sensory.
 - Automatyczne wykrywanie sterownika i encji w edytorze karty, z możliwością ręcznej korekty.
 - Możliwość nadpisania trybu lampki tylko dla konkretnej karty.
 
@@ -216,6 +220,8 @@ Firmware udostępnia między innymi:
 | Restart sterownika | Restart ESP32 — brama wjazdowa | `button` |
 | Połączenie ESPHome | Status połączenia bramy | `binary_sensor` |
 | Sygnał Wi-Fi | Sygnał WiFi bramy | `sensor` |
+| Ostatnie naciśnięcie przycisku bramy | Ostatnie naciśnięcie przycisku bramy | `sensor` |
+| Ostatnie naciśnięcie przycisku furtki | Ostatnie naciśnięcie przycisku furtki | `sensor` |
 
 Home Assistant może nadać encjom inne identyfikatory, jeśli wcześniej zmieniono ich nazwy. W takim przypadku korzystaj z encji widocznych w swoim systemie i popraw przypisania w edytorze karty.
 
@@ -245,6 +251,15 @@ Poniższe przypisania dotyczą płytki ESP32 Relay X4 (AC/DC) i napędu BFT DEIM
 GPIO steruje przekaźnikiem na płytce ESP32 Relay X4. Do centrali BFT podłączane są bezpotencjałowe styki COM i NO przekaźnika, a nie samo GPIO.
 
 Przekaźniki 1 i 2 działają jako styki bezpotencjałowe. Firmware generuje impuls o długości 500 ms. Nie doprowadzaj napięcia zasilającego ESP32 do zacisków sterujących napędu.
+
+### Fizyczne przyciski ścienne
+
+| Funkcja | GPIO ESP32 | Działanie |
+|---|---:|---|
+| Przycisk bramy | GPIO18 | Krótko: impuls P1; długo (1,5 s): przełączenie P3 — blokada zamknięcia |
+| Przycisk furtki | GPIO17 | Krótko: impuls P2; długo (1,5 s): przełączenie P4 — własny |
+
+Wejścia przycisków są przeznaczone do pracy jako styki zwierające GPIO do GND z podciąganiem `INPUT_PULLUP`. Nie doprowadzaj do nich napięcia z centrali BFT. GPIO17 i GPIO18 są przypisaniami projektowymi, które należy potwierdzić na konkretnej wersji płytki ESP32 Relay X4 przed lutowaniem przewodów. Przycisk furtki zachowuje równoległe, bezpośrednie połączenie z centralą BFT jako niezależną drogę awaryjną; piloty również pozostają podłączone bezpośrednio do centrali.
 
 ### Odczyt stanu SCA
 
@@ -280,7 +295,7 @@ Sygnał fotokomórki jest odczytywany przez wejście **GPIO23**. Pomiędzy obwod
 
 ## Wersja
 
-Aktualna wersja integracji i karty: **1.14.0**.
+Aktualna wersja integracji i karty: **1.14.1**.
 
 ## Zgłaszanie problemów
 
