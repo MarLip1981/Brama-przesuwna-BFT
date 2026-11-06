@@ -62,16 +62,34 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
   _state(id) { return this._hass?.states?.[id]?.state; }
   _press(id) { if (id && this._hass) this._hass.callService("button", "press", { entity_id: id }); }
   _toggleSwitch(id) { if (id && this._hass) this._hass.callService("switch", "toggle", { entity_id: id }); }
-  _mainDown() {
+  _mainDown(event) {
     this._mainHoldFired = false;
     clearTimeout(this._mainHoldTimer);
-    if (!this._entity("manual_lock")) return;
+    const lockEntity = this._entity("manual_lock");
+    if (!lockEntity) {
+      console.warn("Brama BFT: nie przypisano encji przełącznika P3 — blokada zamknięcia nie może zostać przełączona.");
+      return;
+    }
+    // Capture the pointer so a touch gesture remains attached to the main
+    // button even if the finger drifts slightly while the user is holding it.
+    if (event?.currentTarget && event.pointerId !== undefined) {
+      try { event.currentTarget.setPointerCapture(event.pointerId); } catch (_) {}
+    }
     this._mainHoldTimer = setTimeout(() => {
       this._mainHoldFired = true;
-      this._toggleSwitch(this._entity("manual_lock"));
+      this._toggleSwitch(lockEntity);
     }, 750);
   }
-  _mainUp() { clearTimeout(this._mainHoldTimer); }
+  _mainUp(event) {
+    clearTimeout(this._mainHoldTimer);
+    if (event?.currentTarget && event.pointerId !== undefined) {
+      try {
+        if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+          event.currentTarget.releasePointerCapture(event.pointerId);
+        }
+      } catch (_) {}
+    }
+  }
   _moreInfo(id) {
     if (id) this.dispatchEvent(new CustomEvent("hass-more-info", {
       detail: { entityId: id }, bubbles: true, composed: true
@@ -175,7 +193,7 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
         .beacon-blink{animation:beaconBlink 1s steps(1,end) infinite}
         @keyframes beaconBlink{0%,49.999%{opacity:0}50%,100%{opacity:1}}
         .actions{display:grid;grid-template-columns:${pedestrianEnabled ? "1fr 1fr" : "1fr"};gap:8px;margin-top:8px}
-        button{min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
+        button{touch-action:none;-webkit-user-select:none;user-select:none;min-height:48px;border:0;border-radius:16px;padding:14px;background:var(--secondary-background-color);color:var(--primary-text-color);font:inherit;font-weight:600;cursor:pointer}
         button.main{color:#429ee8}
         button.pedestrian{color:#39b982}
         button ha-icon{--mdc-icon-size:28px;flex:0 0 auto}
@@ -240,8 +258,8 @@ class BramaPrzesuwnaBFTCard extends HTMLElement {
     head.addEventListener("click", () => { if (this._holdFired) { this._holdFired = false; return; } this._moreInfo(this._entity("status")); });
     head.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); this._moreInfo(this._entity("status")); } });
     const main = this.shadowRoot.querySelector(".main");
-    main.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._mainDown(); });
-    for (const event of ["pointerup","pointerleave","pointercancel"]) main.addEventListener(event, () => this._mainUp());
+    main.addEventListener("pointerdown", e => { if (e.isPrimary !== false && e.button === 0) this._mainDown(e); });
+    for (const event of ["pointerup","pointercancel"]) main.addEventListener(event, e => this._mainUp(e));
     main.addEventListener("click", e => {
       if (this._mainHoldFired) { this._mainHoldFired = false; e.preventDefault(); return; }
       this._press(this._entity("main_button"));
