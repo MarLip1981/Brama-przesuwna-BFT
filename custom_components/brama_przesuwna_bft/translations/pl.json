@@ -61,7 +61,9 @@
           "status": "Stan bramy",
           "position": "Pozycja bramy",
           "main_button": "Sterowanie bramą",
-          "pedestrian_button": "Sterowanie furtką"
+          "pedestrian_button": "Sterowanie furtką",
+          "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
+          "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki"
         }
       }
     }
