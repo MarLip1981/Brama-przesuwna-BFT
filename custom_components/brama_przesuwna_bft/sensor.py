@@ -117,6 +117,10 @@ class JarvisGateSensor(SensorEntity):
             "entrance_lighting_enabled": bool(
                 self._option(OPTION_ENTRANCE_LIGHTING, False)
             ),
+            # String companion for simple ESPHome text-sensor consumers.
+            "entrance_lighting_enabled_text": (
+                "true" if self._option(OPTION_ENTRANCE_LIGHTING, False) else "false"
+            ),
             "pedestrian_mode_enabled": bool(
                 self._option(OPTION_PEDESTRIAN_MODE, False)
             ),
