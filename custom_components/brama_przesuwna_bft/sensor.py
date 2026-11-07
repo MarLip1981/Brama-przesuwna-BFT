@@ -31,8 +31,16 @@ async def async_setup_entry(
     )
     watched = [
         entity_id
-        for entity_id in (entities.get("status"), entities.get("position"))
-        if entity_id
+        for role in (
+            "status",
+            "position",
+            "photocell",
+            "manual_lock",
+            "entrance_lighting",
+            "gate_button_event",
+            "wicket_button_event",
+        )
+        if (entity_id := entities.get(role))
     ]
 
     if watched:
@@ -98,6 +106,11 @@ class JarvisGateSensor(SensorEntity):
         except (TypeError, ValueError):
             gate_position = None
 
+        def _state(role: str) -> str:
+            entity_id = entities.get(role)
+            state = self.hass.states.get(entity_id) if self.hass and entity_id else None
+            return state.state if state else "unknown"
+
         return {
             "opening_direction": self._option(OPTION_OPENING_DIRECTION, "left"),
             "lamp_mode": self._option(OPTION_LAMP_MODE, "auto"),
@@ -117,6 +130,15 @@ class JarvisGateSensor(SensorEntity):
             "position_entity": position_entity or "",
             "main_button_entity": entities.get("main_button") or "",
             "pedestrian_button_entity": entities.get("pedestrian_button") or "",
+            "photocell_entity": entities.get("photocell") or "",
+            "manual_lock_entity": entities.get("manual_lock") or "",
+            "manual_lock_state": _state("manual_lock"),
+            "entrance_lighting_entity": entities.get("entrance_lighting") or "",
+            "entrance_lighting_state": _state("entrance_lighting"),
+            "gate_button_event_entity": entities.get("gate_button_event") or "",
+            "gate_button_event_state": _state("gate_button_event"),
+            "wicket_button_event_entity": entities.get("wicket_button_event") or "",
+            "wicket_button_event_state": _state("wicket_button_event"),
             "gate_status": status.state if status else "unknown",
             "gate_position": gate_position,
         }
