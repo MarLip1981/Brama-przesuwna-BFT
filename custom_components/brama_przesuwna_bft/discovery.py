@@ -17,7 +17,9 @@ ROLE_HINTS = {
     "gate_button_event": ("ostatnie naciśnięcie przycisku bramy", "zdarzenie przycisku bramy"),
     "wicket_button_event": ("ostatnie naciśnięcie przycisku furtki", "zdarzenie przycisku furtki"),
     "manual_lock": ("blokada zamknięcia",),
-    "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4"),
+    # Relay 4 is named "Własny" in the reference ESPHome firmware;
+    # the integration exposes it as driveway lighting when the option is enabled.
+    "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4", "własny", "wlasny"),
 }
 
 
