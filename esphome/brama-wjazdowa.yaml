@@ -4,8 +4,8 @@
 #
 # GPIO32 — przekaźnik 1: brama
 # GPIO33 — przekaźnik 2: furtka
-# GPIO25 — przekaźnik 3 (rezerwa)
-# GPIO26 — przekaźnik 4 (rezerwa)
+# GPIO25 — przekaźnik 3: blokada zamknięcia (P3)
+# GPIO26 — przekaźnik 4: oświetlenie (P4)
 # GPIO22 — sygnał SCA z AUX2
 # GPIO23 — fotokomórka przez optoizolator
 #
