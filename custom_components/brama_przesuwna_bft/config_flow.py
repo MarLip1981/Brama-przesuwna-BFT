@@ -39,7 +39,7 @@ ROLE_LABELS = {
     "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
     "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki",
     "manual_lock": "Blokada zamknięcia — przekaźnik 3",
-    "entrance_lighting": "Oświetlenie wjazdu — przekaźnik 4",
+    "entrance_lighting": "Oświetlenie",
 }
 
 
