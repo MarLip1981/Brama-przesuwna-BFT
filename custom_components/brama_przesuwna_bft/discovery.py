@@ -17,8 +17,8 @@ ROLE_HINTS = {
     "gate_button_event": ("ostatnie naciśnięcie przycisku bramy", "zdarzenie przycisku bramy"),
     "wicket_button_event": ("ostatnie naciśnięcie przycisku furtki", "zdarzenie przycisku furtki"),
     "manual_lock": ("blokada zamknięcia",),
-    # Relay 4 is named "Własny" in the reference ESPHome firmware;
-    # the integration exposes it as driveway lighting when the option is enabled.
+    # Legacy firmware may still expose relay 4 as "Własny". Keep that alias
+    # for discovery, but always present the mapped entity as "Oświetlenie".
     "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4", "własny", "wlasny"),
 }
 
@@ -92,7 +92,11 @@ def discover_esphome_gate_nodes(hass):
                 {
                     "entity_id": entity.entity_id,
                     "domain": entity.entity_id.split(".", 1)[0],
-                    "label": entity.name or entity.original_name or entity.entity_id,
+                    "label": (
+                        "Oświetlenie"
+                        if entity.entity_id == mapped.get("entrance_lighting")
+                        else entity.name or entity.original_name or entity.entity_id
+                    ),
                 }
                 for entity in device_entities
             ]
