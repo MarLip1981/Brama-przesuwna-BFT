@@ -256,7 +256,7 @@ Poniższe przypisania dotyczą płytki ESP32 Relay X4 (AC/DC) i napędu BFT DEIM
 | Przekaźnik 1 | GPIO32 | 60 | 61 | Impuls sterujący bramą |
 | Przekaźnik 2 | GPIO33 | 60 | 62 | Impuls funkcji furtki / częściowego otwarcia |
 | Przekaźnik 3 | GPIO25 | — | — | Ręczna blokada zamknięcia |
-| Przekaźnik 4 | GPIO26 | — | — | Własny — dowolne zastosowanie |
+| Przekaźnik 4 | GPIO26 | — | — | Oświetlenie wjazdu |
 
 GPIO steruje przekaźnikiem na płytce ESP32 Relay X4. Do centrali BFT podłączane są bezpotencjałowe styki COM i NO przekaźnika, a nie samo GPIO.
 
