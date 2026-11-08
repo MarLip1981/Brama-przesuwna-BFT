@@ -21,7 +21,7 @@
           "gate_button_event": "Ostatnie naciśnięcie przycisku bramy (opcjonalnie)",
           "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki (opcjonalnie)",
           "manual_lock": "Blokada zamknięcia — przekaźnik P3 (opcjonalnie)",
-          "entrance_lighting": "Oświetlenie wjazdu — przekaźnik P4 (opcjonalnie)"
+          "entrance_lighting": "Oświetlenie"
         }
       }
     },
@@ -56,7 +56,7 @@
         "description": "Dostosuj działanie karty do swojej instalacji.",
         "data": {
           "pedestrian_mode_enabled": "Przycisk furtki — pokaż na karcie",
-          "entrance_lighting_enabled": "Oświetlenie wjazdu — używaj przekaźnika P4",
+          "entrance_lighting_enabled": "Oświetlenie — używaj przekaźnika P4",
           "opening_direction": "Kierunek otwierania bramy (patrząc od podwórka)",
           "lamp_mode": "Tryb lampki ostrzegawczej"
         }
@@ -81,7 +81,7 @@
           "gate_button_event": "Ostatnie naciśnięcie przycisku bramy",
           "wicket_button_event": "Ostatnie naciśnięcie przycisku furtki",
           "manual_lock": "Blokada zamknięcia — przekaźnik P3",
-          "entrance_lighting": "Oświetlenie wjazdu — przekaźnik P4"
+          "entrance_lighting": "Oświetlenie"
         }
       }
     }
