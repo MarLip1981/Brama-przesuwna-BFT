@@ -17,9 +17,7 @@ ROLE_HINTS = {
     "gate_button_event": ("ostatnie naciśnięcie przycisku bramy", "zdarzenie przycisku bramy"),
     "wicket_button_event": ("ostatnie naciśnięcie przycisku furtki", "zdarzenie przycisku furtki"),
     "manual_lock": ("blokada zamknięcia",),
-    # Legacy firmware may still expose relay 4 as "Własny". Keep that alias
-    # for discovery, but always present the mapped entity as "Oświetlenie".
-    "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4", "własny", "wlasny"),
+    "entrance_lighting": ("oświetlenie", "oswietlenie", "przekaźnik 4", "relay 4"),
 }
 
 
